@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stockwise — Chat with Us</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #1D9E75;
+    --teal-light: #E1F5EE;
+    --teal-mid: #9FE1CB;
+    --teal-dark: #0F6E56;
+    --teal-deep: #085041;
+    --gray: #F7F6F3;
+    --gray-mid: #E8E6E0;
+    --gray-dark: #888780;
+    --text: #1a1a18;
+    --text-muted: #6b6b66;
+    --white: #ffffff;
+    --radius: 16px;
+    --radius-sm: 8px;
+    --shadow: 0 4px 32px rgba(0,0,0,0.10);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gray);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .chat-wrapper {
+    width: 100%;
+    max-width: 420px;
+    background: var(--white);
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 580px;
+    max-height: 90vh;
+    border: 1px solid var(--gray-mid);
+  }
+
+  .chat-header {
+    background: var(--teal);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--teal-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--teal-dark);
+    flex-shrink: 0;
+  }
+
+  .header-info { flex: 1; }
+  .header-name { font-size: 15px; font-weight: 500; color: var(--white); line-height: 1.2; }
+  .header-sub { font-size: 12px; color: var(--teal-mid); margin-top: 2px; }
+
+  .online-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #6EE7B7;
+    flex-shrink: 0;
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-messages::-webkit-scrollbar { width: 4px; }
+  .chat-messages::-webkit-scrollbar-track { background: transparent; }
+  .chat-messages::-webkit-scrollbar-thumb { background: var(--gray-mid); border-radius: 2px; }
+
+  .msg { display: flex; flex-direction: column; max-width: 82%; animation: fadeUp 0.25s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .msg.bot { align-self: flex-start; }
+  .msg.user { align-self: flex-end; }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .msg.bot .bubble {
+    background: var(--gray);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg.user .bubble {
+    background: var(--teal);
+    color: var(--white);
+    border-bottom-right-radius: 4px;
+  }
+
+  .msg-time {
+    font-size: 11px;
+    color: var(--gray-dark);
+    margin-top: 3px;
+    padding: 0 4px;
+  }
+  .msg.user .msg-time { text-align: right; }
+
+  .options-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 0 1rem 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .opt-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 7px 13px;
+    border-radius: 20px;
+    border: 1.5px solid var(--teal);
+    background: var(--teal-light);
+    color: var(--teal-dark);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-weight: 400;
+  }
+  .opt-btn:hover { background: var(--teal-mid); }
+
+  .chat-footer {
+    border-top: 1px solid var(--gray-mid);
+    padding: 0.75rem 1rem;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+    background: var(--white);
+  }
+
+  .chat-input {
+    flex: 1;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    border: 1.5px solid var(--gray-mid);
+    border-radius: 20px;
+    padding: 9px 14px;
+    outline: none;
+    color: var(--text);
+    background: var(--gray);
+    transition: border-color 0.15s;
+  }
+  .chat-input:focus { border-color: var(--teal); background: var(--white); }
+  .chat-input::placeholder { color: var(--gray-dark); }
+
+  .send-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: var(--teal);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .send-btn:hover { background: var(--teal-dark); }
+  .send-btn:active { transform: scale(0.93); }
+  .send-btn svg { width: 16px; height: 16px; fill: white; }
+
+  .typing {
+    display: flex;
+    align-self: flex-start;
+    background: var(--gray);
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    padding: 12px 16px;
+    gap: 4px;
+    animation: fadeUp 0.2s ease;
+  }
+  .typing span {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gray-dark);
+    animation: bounce 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  .contact-form {
+    background: var(--gray);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .contact-form input {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    border: 1.5px solid var(--gray-mid);
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: var(--white);
+    color: var(--text);
+    outline: none;
+  }
+  .contact-form input:focus { border-color: var(--teal); }
+  .contact-form button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 9px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .contact-form button:hover { background: var(--teal-dark); }
+
+  .tagline {
+    text-align: center;
+    font-size: 11px;
+    color: var(--gray-dark);
+    padding: 0 0 0.5rem;
+    font-style: italic;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-wrapper">
+  <div class="chat-header">
+    <div class="avatar">J</div>
+    <div class="header-info">
+      <div class="header-name">Stockwise</div>
+      <div class="header-sub">Jena Imse · Southeast Wisconsin</div>
+    </div>
+    <div class="online-dot"></div>
+  </div>
+
+  <div class="chat-messages" id="messages"></div>
+
+  <div class="options-row" id="options"></div>
+
+  <div class="chat-footer">
+    <input class="chat-input" id="user-input" type="text" placeholder="Type a message..." />
+    <button class="send-btn" onclick="handleSend()" aria-label="Send message">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <div class="tagline">Smarter stock. Smoother business.</div>
+</div>
+
+<script>
+const CONTACT = {
+  name: "Jena Imse",
+  phone: "(262) 278-0216",
+  email: "stockwiseforyou@gmail.com",
+  area: "Southeast Wisconsin"
+};
+
+const flows = {
+  start: {
+    bot: `Hi there! 👋 I'm the Stockwise assistant. Jena helps local businesses across ${CONTACT.area} get their inventory organized and operations running smoothly.\n\nEverything we set up is yours to keep — no subscriptions, no ongoing fees. What can I help you with today?`,
+    opts: [
+      { label: "What does Stockwise do?", next: "about" },
+      { label: "What services are offered?", next: "services" },
+      { label: "How does pricing work?", next: "pricing" },
+      { label: "I'd like to get in touch", next: "contact" }
+    ]
+  },
+  about: {
+    bot: `Stockwise is a hands-on, in-person service for local businesses. Jena comes to your location, figures out what's not working — messy inventory, outdated tracking, back-office tasks piling up — and fixes it.\n\nThe big difference? You own everything we build together. No software to buy, no monthly platform fees. You're paying for expertise and labor, not a subscription.`,
+    opts: [
+      { label: "What services are offered?", next: "services" },
+      { label: "How does pricing work?", next: "pricing" },
+      { label: "I'd like to get in touch", next: "contact" }
+    ]
+  },
+  services: {
+    bot: `Here's what Stockwise typically helps with:\n\n• Inventory cleanup & organization — audit, sort, label, and systemize what you've got\n• Inventory system setup & training — new or upgraded tracking with hands-on training\n• SOP development — written step-by-step procedures so your team knows exactly what to do\n• Workflow design — streamline how work moves through your business day to day\n• Standardized hiring processes — consistent interview and onboarding systems so every hire starts strong\n• Operations efficiency audit — find the friction points costing you time and money\n• Small-task support — the miscellaneous stuff that never gets done\n\nNot sure if your situation fits? Jena offers a free consultation — no commitment, just an honest conversation about what you need.`,
+    opts: [
+      { label: "How does pricing work?", next: "pricing" },
+      { label: "Do I need to buy any software?", next: "nosoftware" },
+      { label: "I'd like to get in touch", next: "contact" }
+    ]
+  },
+  pricing: {
+    bot: `Pricing depends on the size and scope of your project. Every business is different, so Jena puts together a straightforward quote after an initial conversation.\n\nWhat you won't pay for: software, subscriptions, or platform fees. You pay for the work — and once it's done, it's yours.`,
+    opts: [
+      { label: "Do I need to buy any software?", next: "nosoftware" },
+      { label: "I'd like to get in touch", next: "contact" }
+    ]
+  },
+  nosoftware: {
+    bot: `No — you don't need to buy anything. Stockwise works with what you already have, or sets up simple, practical systems using tools you own. No new apps, no subscriptions, no vendor lock-in.\n\nThe goal is a system your team can actually use and maintain on their own after Jena's done.`,
+    opts: [
+      { label: "What services are offered?", next: "services" },
+      { label: "I'd like to get in touch", next: "contact" }
+    ]
+  },
+  contact: {
+    bot: `Great — Jena would love to connect! You can reach out directly:\n\n📞 ${CONTACT.phone}\n✉️ ${CONTACT.email}\n\nOr leave your info below and Jena will follow up within one business day.`,
+    opts: [],
+    form: true
+  }
+};
+
+let currentState = "start";
+
+function now() {
+  return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function addMessage(text, type) {
+  const msgs = document.getElementById("messages");
+  const msg = document.createElement("div");
+  msg.className = `msg ${type}`;
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.innerHTML = text.replace(/\n/g, "<br>");
+  const time = document.createElement("div");
+  time.className = "msg-time";
+  time.textContent = now();
+  msg.appendChild(bubble);
+  msg.appendChild(time);
+  msgs.appendChild(msg);
+  msgs.scrollTop = msgs.scrollHeight;
+  return msg;
+}
+
+function showTyping() {
+  const msgs = document.getElementById("messages");
+  const t = document.createElement("div");
+  t.className = "typing";
+  t.id = "typing-indicator";
+  t.innerHTML = "<span></span><span></span><span></span>";
+  msgs.appendChild(t);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById("typing-indicator");
+  if (t) t.remove();
+}
+
+function setOptions(opts) {
+  const row = document.getElementById("options");
+  row.innerHTML = "";
+  opts.forEach(o => {
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.textContent = o.label;
+    btn.onclick = () => handleOpt(o);
+    row.appendChild(btn);
+  });
+}
+
+function showContactForm() {
+  const msgs = document.getElementById("messages");
+  const wrap = document.createElement("div");
+  wrap.className = "msg bot";
+  const form = document.createElement("div");
+  form.className = "contact-form";
+  form.innerHTML = `
+    <input type="text" id="cf-name" placeholder="Your name" />
+    <input type="text" id="cf-biz" placeholder="Business name" />
+    <input type="tel" id="cf-phone" placeholder="Your phone number" />
+    <input type="email" id="cf-email" placeholder="Your email (optional)" />
+    <button onclick="submitContact()">Send my info to Jena</button>
+  `;
+  wrap.appendChild(form);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function submitContact() {
+  const name = document.getElementById("cf-name").value.trim();
+  const biz = document.getElementById("cf-biz").value.trim();
+  const phone = document.getElementById("cf-phone").value.trim();
+  if (!name || !phone) {
+    alert("Please enter your name and phone number.");
+    return;
+  }
+  document.getElementById("options").innerHTML = "";
+  const forms = document.querySelectorAll(".contact-form");
+  forms.forEach(f => f.closest(".msg").remove());
+  addMessage(`${name} · ${biz} · ${phone}`, "user");
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    addMessage(`Thanks, ${name}! Jena will be in touch within one business day at ${phone}. Looking forward to learning more about ${biz || "your business"}!`, "bot");
+  }, 1000);
+}
+
+function handleOpt(opt) {
+  document.getElementById("options").innerHTML = "";
+  addMessage(opt.label, "user");
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const flow = flows[opt.next];
+    addMessage(flow.bot, "bot");
+    if (flow.form) showContactForm();
+    setOptions(flow.opts || []);
+    currentState = opt.next;
+  }, 700);
+}
+
+function handleSend() {
+  const input = document.getElementById("user-input");
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  document.getElementById("options").innerHTML = "";
+  addMessage(text, "user");
+  showTyping();
+  setTimeout(() => {
+    removeTyping();
+    const lower = text.toLowerCase();
+    let response = "";
+    let next = "start";
+    if (lower.includes("price") || lower.includes("cost") || lower.includes("charge") || lower.includes("fee")) {
+      response = flows.pricing.bot;
+      next = "pricing";
+    } else if (lower.includes("service") || lower.includes("offer") || lower.includes("help") || lower.includes("do")) {
+      response = flows.services.bot;
+      next = "services";
+    } else if (lower.includes("software") || lower.includes("app") || lower.includes("subscription") || lower.includes("program")) {
+      response = flows.nosoftware.bot;
+      next = "nosoftware";
+    } else if (lower.includes("contact") || lower.includes("reach") || lower.includes("call") || lower.includes("email") || lower.includes("touch") || lower.includes("talk")) {
+      response = flows.contact.bot;
+      next = "contact";
+    } else if (lower.includes("about") || lower.includes("what is") || lower.includes("who")) {
+      response = flows.about.bot;
+      next = "about";
+    } else {
+      response = `Thanks for your message! For the quickest response, feel free to reach Jena directly at ${CONTACT.phone} or ${CONTACT.email}. She typically responds within one business day.`;
+    }
+    addMessage(response, "bot");
+    if (next === "contact") showContactForm();
+    setOptions((flows[next] || {}).opts || []);
+    currentState = next;
+  }, 800);
+}
+
+document.getElementById("user-input").addEventListener("keydown", e => {
+  if (e.key === "Enter") handleSend();
+});
+
+showTyping();
+setTimeout(() => {
+  removeTyping();
+  const flow = flows.start;
+  addMessage(flow.bot, "bot");
+  setOptions(flow.opts);
+}, 900);
+</script>
+</body>
+</html>

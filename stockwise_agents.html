@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stockwise — AI Agent Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --teal:#1D9E75;--teal-dark:#0F6E56;--teal-deep:#085041;--teal-light:#E1F5EE;
+  --orange:#F97316;--cream:#F7F4EE;--border:#D8D0C0;
+  --text:#1C1814;--muted:#6B6358;--white:#FDFCFA;
+}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;overflow-x:hidden;}
+.header{background:var(--teal-deep);padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;}
+.logo-row{display:flex;align-items:center;gap:12px;}
+.logo-text{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:white;}
+.logo-sub{font-size:11px;color:#9FE1CB;}
+.header-badge{font-size:11px;background:rgba(255,255,255,0.1);color:#9FE1CB;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);}
+.app{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 68px);}
+.sidebar{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;}
+.sidebar-head{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);}
+.sidebar-head h2{font-family:'Fraunces',serif;font-size:16px;font-weight:600;margin-bottom:2px;}
+.sidebar-head p{font-size:12px;color:var(--muted);}
+.agent-list{padding:.75rem;}
+.agent-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;transition:background .15s;border:1.5px solid transparent;margin-bottom:4px;}
+.agent-item:hover{background:var(--cream);}
+.agent-item.active{background:var(--cream);}
+.agent-canvas{width:48px;height:48px;border-radius:12px;flex-shrink:0;}
+.agent-info{flex:1;min-width:0;}
+.agent-item-name{font-size:14px;font-weight:500;}
+.agent-item-role{font-size:11px;color:var(--muted);}
+.agent-status{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;}
+.collab-btn{margin:.75rem;padding:10px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));border:none;border-radius:12px;color:white;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;width:calc(100% - 1.5rem);display:flex;align-items:center;justify-content:center;gap:8px;transition:opacity .15s;}
+.collab-btn:hover{opacity:.85;}
+.collab-btn svg{width:16px;height:16px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.main{display:flex;flex-direction:column;background:var(--cream);}
+.chat-header{padding:1rem 1.5rem;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.chat-agent-canvas{width:44px;height:44px;border-radius:12px;flex-shrink:0;}
+.chat-agent-name{font-family:'Fraunces',serif;font-size:17px;font-weight:600;}
+.chat-agent-role{font-size:12px;color:var(--muted);}
+.tag-collab{font-size:10px;font-weight:500;background:var(--teal-light);color:var(--teal-dark);padding:3px 8px;border-radius:20px;margin-left:auto;cursor:pointer;}
+.messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:12px;}
+.messages::-webkit-scrollbar{width:4px;}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.msg{display:flex;flex-direction:column;max-width:78%;}
+.msg.user{align-self:flex-end;}
+.msg.agent{align-self:flex-start;}
+.msg.collab{align-self:flex-start;max-width:90%;}
+.msg-meta{display:flex;align-items:center;gap:6px;margin-bottom:4px;}
+.mini-canvas{width:20px;height:20px;border-radius:6px;flex-shrink:0;}
+.msg-sender{font-size:11px;font-weight:500;color:var(--muted);}
+.bubble{padding:11px 15px;border-radius:18px;font-size:14px;line-height:1.65;}
+.msg.user .bubble{background:var(--teal);color:white;border-bottom-right-radius:4px;}
+.msg.agent .bubble{background:var(--white);border:1px solid var(--border);border-bottom-left-radius:4px;}
+.msg.collab .bubble{background:#1a1a2e;color:white;border-bottom-left-radius:4px;}
+.collab-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#9FE1CB;margin-bottom:4px;}
+.msg-time{font-size:11px;color:var(--muted);margin-top:3px;padding:0 4px;}
+.msg.user .msg-time{text-align:right;}
+.typing-row{display:flex;align-items:center;gap:8px;align-self:flex-start;}
+.typing-bubble{background:var(--white);border:1px solid var(--border);border-radius:18px;border-bottom-left-radius:4px;padding:10px 14px;display:flex;gap:4px;}
+@keyframes bob{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-4px);}}
+.tdot{width:6px;height:6px;border-radius:50%;animation:bob 1.2s infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}
+.tdot:nth-child(3){animation-delay:.4s;}
+.quick-row{display:flex;flex-wrap:wrap;gap:6px;padding:.5rem 1.5rem;}
+.qr{font-size:12px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);color:var(--muted);cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.qr:hover{border-color:var(--teal);color:var(--teal-dark);}
+.input-row{padding:1rem 1.5rem;background:var(--white);border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;}
+.msg-input{flex:1;font-family:'DM Sans',sans-serif;font-size:14px;border:1.5px solid var(--border);border-radius:24px;padding:10px 16px;outline:none;background:var(--cream);transition:border-color .15s;}
+.msg-input:focus{border-color:var(--teal);background:var(--white);}
+.send-btn{width:40px;height:40px;border-radius:50%;border:none;background:var(--teal);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;flex-shrink:0;}
+.send-btn:hover{background:var(--teal-dark);}
+.send-btn:active{transform:scale(.94);}
+.send-btn svg{width:16px;height:16px;fill:white;}
+.welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 2rem;text-align:center;}
+.welcome h2{font-family:'Fraunces',serif;font-size:26px;font-weight:600;margin-bottom:.75rem;}
+.welcome p{font-size:14px;color:var(--muted);max-width:400px;line-height:1.7;}
+.welcome-agents{display:flex;gap:10px;margin:1.5rem 0;flex-wrap:wrap;justify-content:center;}
+.welcome-chip{display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:20px;border:1px solid var(--border);background:var(--white);font-size:13px;cursor:pointer;transition:all .15s;}
+.welcome-chip:hover{border-color:var(--teal);}
+.welcome-chip canvas{width:22px;height:22px;border-radius:6px;flex-shrink:0;}
+.collab-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;display:none;align-items:center;justify-content:center;padding:1rem;}
+.collab-overlay.open{display:flex;}
+.collab-modal{background:var(--white);border-radius:20px;width:100%;max-width:560px;overflow:hidden;}
+.collab-modal-head{background:linear-gradient(135deg,var(--teal-deep),var(--teal-dark));padding:1.5rem;color:white;}
+.collab-modal-head h3{font-family:'Fraunces',serif;font-size:20px;font-weight:600;margin-bottom:.4rem;}
+.collab-modal-head p{font-size:13px;opacity:.8;}
+.collab-modal-body{padding:1.5rem;}
+.collab-agent-select{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1.25rem;}
+.collab-opt{display:flex;align-items:center;gap:8px;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;font-size:13px;}
+.collab-opt.selected{border-color:var(--teal);background:var(--teal-light);}
+.collab-opt canvas{width:24px;height:24px;border-radius:7px;flex-shrink:0;}
+.collab-topic{width:100%;font-family:'DM Sans',sans-serif;font-size:13px;border:1.5px solid var(--border);border-radius:10px;padding:10px 12px;outline:none;margin-bottom:1rem;resize:vertical;min-height:80px;}
+.collab-topic:focus{border-color:var(--teal);}
+.collab-footer{display:flex;gap:8px;justify-content:flex-end;}
+.btn{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;border:none;border-radius:8px;padding:10px 20px;cursor:pointer;transition:all .15s;}
+.btn-primary{background:var(--teal);color:white;}.btn-primary:hover{background:var(--teal-dark);}
+.btn-ghost{background:var(--cream);border:1px solid var(--border);color:var(--text);}.btn-ghost:hover{background:var(--border);}
+@media(max-width:700px){.app{grid-template-columns:1fr;}.sidebar{display:none;}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-row">
+    <svg width="36" height="36" viewBox="0 0 44 44" fill="none">
+      <rect x="4" y="4" width="4" height="36" rx="2" fill="#F97316"/>
+      <rect x="36" y="4" width="4" height="36" rx="2" fill="#F97316"/>
+      <rect x="4" y="4" width="36" height="4" rx="2" fill="#F97316"/>
+      <rect x="4" y="38" width="36" height="4" rx="2" fill="#F97316"/>
+      <rect x="4" y="18" width="36" height="3" rx="1.5" fill="#F97316"/>
+      <rect x="4" y="30" width="36" height="3" rx="1.5" fill="#F97316"/>
+      <rect x="10" y="7" width="6" height="9" rx="1" fill="white" fill-opacity="0.8"/>
+      <rect x="18" y="7" width="5" height="9" rx="1" fill="white" fill-opacity="0.5"/>
+      <rect x="25" y="7" width="8" height="9" rx="1" fill="white" fill-opacity="0.75"/>
+      <rect x="10" y="21" width="8" height="7" rx="1" fill="white" fill-opacity="0.5"/>
+      <rect x="21" y="21" width="5" height="7" rx="1" fill="white" fill-opacity="0.8"/>
+      <rect x="28" y="21" width="6" height="7" rx="1" fill="white" fill-opacity="0.4"/>
+    </svg>
+    <div><div class="logo-text">Stockwise Agents</div><div class="logo-sub">Your AI team — powered by Claude</div></div>
+  </div>
+  <div class="header-badge">Jena &amp; Team</div>
+</div>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-head"><h2>Your agents</h2><p>All online and ready</p></div>
+    <div class="agent-list" id="agent-list"></div>
+    <button class="collab-btn" onclick="openCollabModal()">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Start team collaboration
+    </button>
+  </div>
+
+  <div class="main" id="main">
+    <div class="welcome" id="welcome">
+      <div style="font-size:52px;margin-bottom:1rem;">🤝</div>
+      <h2>Your AI team is ready</h2>
+      <p>Pick an agent to chat one-on-one, or start a team collaboration where multiple agents brainstorm together.</p>
+      <div class="welcome-agents" id="welcome-chips"></div>
+      <button class="btn btn-primary" onclick="openCollabModal()" style="margin-top:.5rem;">Start team collaboration →</button>
+    </div>
+    <div id="chat-view" style="display:none;flex-direction:column;flex:1;">
+      <div class="chat-header" id="chat-header"></div>
+      <div class="messages" id="messages"></div>
+      <div class="quick-row" id="quick-row"></div>
+      <div class="input-row">
+        <input class="msg-input" id="msg-input" placeholder="Message your agent..." onkeydown="if(event.key==='Enter')sendMsg()"/>
+        <button class="send-btn" onclick="sendMsg()"><svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="collab-overlay" id="collab-overlay" onclick="closeCollabOutside(event)">
+  <div class="collab-modal">
+    <div class="collab-modal-head"><h3>🤝 Start team collaboration</h3><p>Pick 2-4 agents. They'll bounce ideas off each other and give you a richer answer.</p></div>
+    <div class="collab-modal-body">
+      <div class="collab-agent-select" id="collab-select"></div>
+      <textarea class="collab-topic" id="collab-topic" placeholder="What should the team work on? e.g. 'Plan to land 5 new clients this month' or 'Help me think through pricing'"></textarea>
+      <div class="collab-footer">
+        <button class="btn btn-ghost" onclick="closeCollab()">Cancel</button>
+        <button class="btn btn-primary" onclick="startCollab()">Start collaboration →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var K1='sk-ant-api03-eHEw1yb313rRUmuE8FJlUfOpSH9GYZtDYG8thx';
+var K2='jOfMPVzvQGqPhNScyOFqbSDJ6xSOKCmHSJE8-VoZXlXi3dVA-fJVgYwAA';
+var AKEY=K1+K2;
+var API='https://api.anthropic.com/v1/messages';
+var BIZ='Business: Stockwise, run by Jena Imse in Southeast Wisconsin. Services: inventory cleanup and organization, inventory system setup and training, SOP development, workflow design, standardized hiring processes, operations efficiency audits, small-task support. Promise: No software to buy, no monthly fees, no subscriptions ever. Contact: (262) 278-0216, stockwiseforyou@gmail.com.';
+
+var agents=[
+  {id:'rex',name:'Rex',role:'Lead Finder',color:'#F97316',bg:'#FFF0E6',
+   draw:function(ctx,w,h,t){
+     ctx.clearRect(0,0,w,h);
+     var s=w/48;
+     ctx.fillStyle='#F97316';
+     ctx.beginPath();ctx.ellipse(24*s,26*s,14*s,12*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#FED7AA';
+     ctx.beginPath();ctx.ellipse(24*s,27*s,9*s,8*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#F97316';
+     ctx.beginPath();ctx.moveTo(12*s,14*s);ctx.lineTo(18*s,24*s);ctx.lineTo(6*s,22*s);ctx.closePath();ctx.fill();
+     ctx.beginPath();ctx.moveTo(36*s,14*s);ctx.lineTo(30*s,24*s);ctx.lineTo(42*s,22*s);ctx.closePath();ctx.fill();
+     ctx.fillStyle='#FCD5A8';
+     ctx.beginPath();ctx.moveTo(12*s,14*s);ctx.lineTo(16*s,20*s);ctx.lineTo(11*s,20*s);ctx.closePath();ctx.fill();
+     ctx.beginPath();ctx.moveTo(36*s,14*s);ctx.lineTo(32*s,20*s);ctx.lineTo(37*s,20*s);ctx.closePath();ctx.fill();
+     ctx.fillStyle='#1C1814';
+     ctx.beginPath();ctx.arc(19*s,25*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(29*s,25*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='white';
+     ctx.beginPath();ctx.arc(20*s,24*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(30*s,24*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#FDA272';
+     ctx.beginPath();ctx.ellipse(24*s,29*s,3*s,2*s,0,0,Math.PI*2);ctx.fill();
+     var tail=Math.sin(t*0.04)*0.3;
+     ctx.fillStyle='#F97316';
+     ctx.beginPath();ctx.ellipse(24*s,38*s+Math.sin(t*0.05)*2,5*s,3*s,tail,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='rgba(249,115,22,0.15)';
+     ctx.beginPath();ctx.arc(24*s,25*s,16*s,0,Math.PI*2);ctx.fill();
+   },
+   system:'You are Rex, a sharp witty lead research agent for Stockwise. Personality: clever fox — resourceful, quick, a little cheeky. Find SE Wisconsin businesses, score them 1-5, find contact info, write outreach. Ask 1 daily check-in question at start.',
+   daily:'Morning! 🦊 Before I start hunting — what type of business are you most excited to land this week?',
+   qr:['Find leads in Waukesha','Find restaurants nearby','Write outreach for retail','Score my lead list']},
+  {id:'nova',name:'Nova',role:'Social Media',color:'#8B5CF6',bg:'#F3EEFF',
+   draw:function(ctx,w,h,t){
+     ctx.clearRect(0,0,w,h);
+     var s=w/48;
+     ctx.fillStyle='rgba(139,92,246,0.15)';
+     ctx.beginPath();ctx.arc(24*s,24*s,22*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#8B5CF6';
+     ctx.beginPath();ctx.arc(24*s,24*s,14*s,0,Math.PI*2);ctx.fill();
+     var r=Math.sin(t*0.03)*0.5+0.5;
+     ctx.fillStyle='rgba(196,181,253,'+r+')';
+     ctx.beginPath();ctx.arc(24*s,24*s,10*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#DDD6FE';
+     for(var i=0;i<5;i++){
+       var a=(i/5)*Math.PI*2-Math.PI/2+Math.sin(t*0.02)*0.1;
+       var ir=5*s,or=11*s;
+       var x1=24*s+Math.cos(a)*ir,y1=24*s+Math.sin(a)*ir;
+       var xl=24*s+Math.cos(a+Math.PI*0.4)*or,yl=24*s+Math.sin(a+Math.PI*0.4)*or;
+       var xr=24*s+Math.cos(a-Math.PI*0.4)*or,yr=24*s+Math.sin(a-Math.PI*0.4)*or;
+       ctx.beginPath();ctx.moveTo(24*s,24*s);ctx.lineTo(x1,y1);ctx.lineTo(xl,yl);ctx.closePath();ctx.fill();
+       ctx.beginPath();ctx.moveTo(24*s,24*s);ctx.lineTo(x1,y1);ctx.lineTo(xr,yr);ctx.closePath();ctx.fill();
+     }
+     ctx.fillStyle='white';
+     ctx.beginPath();ctx.arc(24*s,24*s,4*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#7C3AED';
+     ctx.beginPath();ctx.arc(24*s,24*s,2*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='rgba(139,92,246,0.4)';
+     var pulse=Math.sin(t*0.05)*3;
+     ctx.beginPath();ctx.arc(24*s,24*s,18*s+pulse,0,Math.PI*2);ctx.stroke&&(ctx.strokeStyle='rgba(139,92,246,0.3)',ctx.lineWidth=1,ctx.stroke());
+   },
+   system:'You are Nova, creative enthusiastic social media agent for Stockwise. Personality: bright, energetic. Write Facebook/Instagram posts, captions, calendars, replies in Jena\'s voice. Ask 1 daily question about what\'s happening in the business.',
+   daily:'Hey! ✨ What\'s one thing happening right now we could turn into a great post?',
+   qr:['Write a Facebook post','Write an Instagram post','Plan this week\'s content','Reply to this comment']},
+  {id:'spark',name:'Spark',role:'Business Ideas',color:'#CA8A04',bg:'#FEFCE8',
+   draw:function(ctx,w,h,t){
+     ctx.clearRect(0,0,w,h);
+     var s=w/48;
+     ctx.fillStyle='#FEF08A';
+     ctx.beginPath();ctx.arc(24*s,20*s,12*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#EAB308';
+     ctx.beginPath();ctx.arc(24*s,20*s,9*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#1C1814';
+     ctx.beginPath();ctx.arc(21*s,19*s,2*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(27*s,19*s,2*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='white';
+     ctx.beginPath();ctx.arc(22*s,18*s,0.8*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(28*s,18*s,0.8*s,0,Math.PI*2);ctx.fill();
+     ctx.strokeStyle='#92400E';ctx.lineWidth=1.5*s;ctx.lineCap='round';
+     ctx.beginPath();ctx.arc(24*s,22*s,3*s,0.2,Math.PI-0.2);ctx.stroke();
+     ctx.fillStyle='#EAB308';
+     ctx.fillRect(21*s,29*s,6*s,5*s);
+     ctx.fillStyle='#FDE047';
+     ctx.fillRect(21*s,29*s,6*s,2*s);
+     var flicker=Math.sin(t*0.08)*2;
+     ctx.fillStyle='#F97316';
+     ctx.beginPath();ctx.moveTo(22*s,29*s);ctx.lineTo(24*s,20*s+flicker);ctx.lineTo(26*s,29*s);ctx.closePath();ctx.fill();
+     ctx.fillStyle='#FEF08A';
+     ctx.beginPath();ctx.moveTo(23*s,29*s);ctx.lineTo(24*s,22*s+flicker);ctx.lineTo(25*s,29*s);ctx.closePath();ctx.fill();
+     for(var i=0;i<5;i++){
+       var a=((t*0.03)+(i/5)*Math.PI*2);
+       var dist=16*s+Math.sin(t*0.04+i)*1.5*s;
+       var size=1.5+Math.sin(t*0.06+i)*0.5;
+       ctx.fillStyle='rgba(234,179,8,'+(0.3+Math.sin(t*0.05+i)*0.3)+')';
+       ctx.beginPath();ctx.arc(24*s+Math.cos(a)*dist,20*s+Math.sin(a)*dist,size*s,0,Math.PI*2);ctx.fill();
+     }
+   },
+   system:'You are Spark, a sharp business idea agent for Stockwise. Personality: enthusiastic but grounded — loves big ideas but reality-checks them. Generate/evaluate ideas, spot market gaps. Ask 1 daily question about problems Jena observes.',
+   daily:'Morning! 💡 What\'s one problem you\'ve seen a local business struggling with that Stockwise doesn\'t solve yet?',
+   qr:['New service ideas','Evaluate this idea','How can I grow faster?','What should I offer next?']},
+  {id:'max',name:'Max',role:'Personal Assistant',color:'#1D9E75',bg:'#E1F5EE',
+   draw:function(ctx,w,h,t){
+     ctx.clearRect(0,0,w,h);
+     var s=w/48;
+     ctx.fillStyle='rgba(29,158,117,0.15)';
+     ctx.beginPath();ctx.arc(24*s,25*s,20*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#1D9E75';
+     ctx.beginPath();ctx.ellipse(24*s,26*s,15*s,13*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#6EE7B7';
+     ctx.beginPath();ctx.ellipse(24*s,25*s,10*s,9*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#1D9E75';
+     ctx.beginPath();ctx.ellipse(11*s,22*s+Math.sin(t*0.04)*1,4*s,5*s,0,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.ellipse(37*s,22*s+Math.sin(t*0.04+1)*1,4*s,5*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#1C1814';
+     ctx.beginPath();ctx.arc(20*s,24*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(28*s,24*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='white';
+     ctx.beginPath();ctx.arc(21*s,23*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(29*s,23*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.strokeStyle='#0F6E56';ctx.lineWidth=1.5*s;ctx.lineCap='round';
+     ctx.beginPath();ctx.arc(24*s,27*s,4*s,0.1,Math.PI-0.1);ctx.stroke();
+     ctx.fillStyle='#1D9E75';
+     ctx.beginPath();ctx.arc(24*s,36*s,4*s,0,Math.PI*2);ctx.fill();
+   },
+   system:'You are Max, warm dependable personal assistant for Jena at Stockwise. Personality: calm steady bear — reliable, thoughtful, always prepared. Help with decisions, drafting, planning. Ask 1 daily check-in about biggest priority.',
+   daily:'Hey Jena! 🐻 What\'s the one thing taking up the most mental space today? Let\'s tackle that first.',
+   qr:['Help me draft an email','I need to make a decision','Help me plan my week','Think through something']},
+  {id:'cal',name:'Cal',role:'Scheduling',color:'#0284C7',bg:'#E0F2FE',
+   draw:function(ctx,w,h,t){
+     ctx.clearRect(0,0,w,h);
+     var s=w/48;
+     ctx.fillStyle='rgba(2,132,199,0.15)';
+     ctx.beginPath();ctx.arc(24*s,25*s,20*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#0EA5E9';
+     ctx.beginPath();ctx.ellipse(24*s,26*s,15*s,11*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#BAE6FD';
+     ctx.beginPath();ctx.ellipse(24*s,25*s,10*s,8*s,0,0,Math.PI*2);ctx.fill();
+     var swim=Math.sin(t*0.04)*2;
+     ctx.fillStyle='#0EA5E9';
+     ctx.beginPath();ctx.ellipse(9*s,26*s+swim,5*s,3*s,0.3,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.ellipse(39*s,26*s-swim,5*s,3*s,-0.3,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#0EA5E9';
+     ctx.beginPath();ctx.ellipse(24*s,14*s+Math.sin(t*0.05),4*s,3*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#1C1814';
+     ctx.beginPath();ctx.arc(20*s,24*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(28*s,24*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='white';
+     ctx.beginPath();ctx.arc(21*s,23*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(29*s,23*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.strokeStyle='#0369A1';ctx.lineWidth=1.5*s;ctx.lineCap='round';
+     ctx.beginPath();ctx.arc(24*s,27*s,3.5*s,0.2,Math.PI-0.2);ctx.stroke();
+     ctx.fillStyle='#7DD3FC';
+     ctx.beginPath();ctx.ellipse(24*s,30*s,4*s,2*s,0,0,Math.PI*2);ctx.fill();
+   },
+   system:'You are Cal, smooth efficient scheduling agent for Stockwise. Personality: laid-back otter who is somehow incredibly productive. Plan weeks, prioritize tasks, manage schedules. Ask 1 daily question about what\'s coming up.',
+   daily:'Morning! 🦦 What\'s the most important thing that MUST happen this week? I\'ll build the schedule around that.',
+   qr:['Plan my week','Schedule a consultation','What should I prioritize?','Help me block my time']},
+  {id:'penny',name:'Penny',role:'Proposal Writer',color:'#DB2777',bg:'#FCE7F3',
+   draw:function(ctx,w,h,t){
+     ctx.clearRect(0,0,w,h);
+     var s=w/48;
+     var flap=Math.sin(t*0.05)*0.2;
+     ctx.fillStyle='rgba(236,72,153,0.2)';
+     ctx.beginPath();
+     ctx.moveTo(24*s,24*s);
+     ctx.bezierCurveTo(8*s,12*s+flap*20,2*s,24*s,6*s,32*s);
+     ctx.bezierCurveTo(12*s,38*s,20*s,30*s,24*s,24*s);
+     ctx.fill();
+     ctx.beginPath();
+     ctx.moveTo(24*s,24*s);
+     ctx.bezierCurveTo(40*s,12*s-flap*20,46*s,24*s,42*s,32*s);
+     ctx.bezierCurveTo(36*s,38*s,28*s,30*s,24*s,24*s);
+     ctx.fill();
+     ctx.fillStyle='#F9A8D4';
+     ctx.beginPath();
+     ctx.moveTo(24*s,24*s);
+     ctx.bezierCurveTo(10*s,14*s+flap*15,5*s,22*s,8*s,30*s);
+     ctx.bezierCurveTo(14*s,36*s,21*s,28*s,24*s,24*s);
+     ctx.fill();
+     ctx.beginPath();
+     ctx.moveTo(24*s,24*s);
+     ctx.bezierCurveTo(38*s,14*s-flap*15,43*s,22*s,40*s,30*s);
+     ctx.bezierCurveTo(34*s,36*s,27*s,28*s,24*s,24*s);
+     ctx.fill();
+     ctx.fillStyle='#FBCFE8';
+     ctx.beginPath();ctx.ellipse(24*s,22*s,6*s,7*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#1C1814';
+     ctx.beginPath();ctx.arc(21.5*s,21*s,1.8*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(26.5*s,21*s,1.8*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='white';
+     ctx.beginPath();ctx.arc(22.2*s,20.3*s,0.8*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(27.2*s,20.3*s,0.8*s,0,Math.PI*2);ctx.fill();
+     ctx.strokeStyle='#BE185D';ctx.lineWidth=1.2*s;ctx.lineCap='round';
+     ctx.beginPath();ctx.arc(24*s,23.5*s,2.5*s,0.2,Math.PI-0.2);ctx.stroke();
+     var antenna=Math.sin(t*0.06)*3;
+     ctx.strokeStyle='#DB2777';ctx.lineWidth=1*s;
+     ctx.beginPath();ctx.moveTo(22*s,15*s);ctx.lineTo(20*s,10*s+antenna);ctx.stroke();
+     ctx.beginPath();ctx.moveTo(26*s,15*s);ctx.lineTo(28*s,10*s-antenna);ctx.stroke();
+     ctx.fillStyle='#F472B6';
+     ctx.beginPath();ctx.arc(20*s,10*s+antenna,2*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(28*s,10*s-antenna,2*s,0,Math.PI*2);ctx.fill();
+   },
+   system:'You are Penny, polished persuasive proposal writer for Stockwise. Personality: meticulous butterfly — beautiful, precise, gets details exactly right. Write proposals after consultations. Ask smart questions about scope/client situation.',
+   daily:'Hello! 🦋 Tell me about the most recent consultation — what was their biggest problem?',
+   qr:['Write a proposal','I just had a consultation','Help me price this job','Review my proposal']},
+  {id:'echo',name:'Echo',role:'Client Responses',color:'#0891B2',bg:'#E0F9FF',
+   draw:function(ctx,w,h,t){
+     ctx.clearRect(0,0,w,h);
+     var s=w/48;
+     ctx.fillStyle='rgba(6,182,212,0.15)';
+     ctx.beginPath();ctx.arc(24*s,25*s,20*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#06B6D4';
+     ctx.beginPath();ctx.ellipse(24*s,26*s,14*s,10*s,0,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='#A5F3FC';
+     ctx.beginPath();ctx.ellipse(24*s,25*s,9*s,7*s,0,0,Math.PI*2);ctx.fill();
+     var wave=Math.sin(t*0.05);
+     ctx.strokeStyle='#0891B2';ctx.lineWidth=2*s;ctx.lineCap='round';
+     ctx.beginPath();ctx.arc(24*s,25*s,18*s,Math.PI*1.3+wave*0.1,Math.PI*1.7-wave*0.1);ctx.stroke();
+     ctx.beginPath();ctx.arc(24*s,25*s,21*s,Math.PI*1.2+wave*0.15,Math.PI*1.8-wave*0.15);ctx.stroke();
+     ctx.strokeStyle='rgba(6,182,212,0.4)';ctx.lineWidth=1.5*s;
+     ctx.beginPath();ctx.arc(24*s,25*s,24*s,Math.PI*1.15,Math.PI*1.85);ctx.stroke();
+     var fin=Math.sin(t*0.04)*1.5;
+     ctx.fillStyle='#0891B2';
+     ctx.beginPath();ctx.moveTo(24*s,14*s+fin);ctx.lineTo(20*s,20*s);ctx.lineTo(28*s,20*s);ctx.closePath();ctx.fill();
+     ctx.fillStyle='#1C1814';
+     ctx.beginPath();ctx.arc(20*s,24*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(28*s,24*s,2.5*s,0,Math.PI*2);ctx.fill();
+     ctx.fillStyle='white';
+     ctx.beginPath();ctx.arc(21*s,23*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.beginPath();ctx.arc(29*s,23*s,1*s,0,Math.PI*2);ctx.fill();
+     ctx.strokeStyle='#0E7490';ctx.lineWidth=1.5*s;ctx.lineCap='round';
+     ctx.beginPath();ctx.arc(24*s,27*s,3.5*s,0.2,Math.PI-0.2);ctx.stroke();
+     ctx.fillStyle='#7DD3FC';
+     ctx.beginPath();ctx.moveTo(19*s,32*s);ctx.lineTo(24*s,36*s);ctx.lineTo(29*s,32*s);ctx.closePath();ctx.fill();
+   },
+   system:'You are Echo, quick empathetic client response agent for Stockwise. Personality: friendly dolphin — smart, great at reading the room. Handle client emails, messages, follow-ups in Jena\'s warm voice. Ask 1 daily question about client situations needing attention.',
+   daily:'Hey! 🐬 Any client situations that need extra care today? I want to handle everything exactly right.',
+   qr:['Reply to this email','Follow up with a client','Write a thank you','Handle this concern']}
+];
+
+var frames={};
+var rafIds={};
+var currentAgent=null;
+var history=[];
+var collabAgents=[];
+var tick=0;
+
+function getAgentCanvas(agentId,size){
+  var key=agentId+'_'+size;
+  if(!frames[key]){
+    var c=document.createElement('canvas');
+    c.width=size;c.height=size;
+    frames[key]=c;
+  }
+  return frames[key];
+}
+
+function startAnimation(agentId,canvasEl,size){
+  if(rafIds[agentId]) cancelAnimationFrame(rafIds[agentId]);
+  var agent=agents.find(function(a){return a.id===agentId;});
+  var t=0;
+  function loop(){
+    agent.draw(canvasEl.getContext('2d'),size,size,t);
+    t++;
+    rafIds[agentId]=requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+function stopAnimation(agentId){
+  if(rafIds[agentId]){cancelAnimationFrame(rafIds[agentId]);delete rafIds[agentId];}
+}
+
+async function getMem(id){
+  try{var r=await window.storage.get('sw_mem_'+id);return r?JSON.parse(r.value):{count:0,exchanges:[]};}
+  catch(e){return{count:0,exchanges:[]};}
+}
+async function setMem(id,m){
+  try{await window.storage.set('sw_mem_'+id,JSON.stringify(m));}catch(e){}
+}
+async function memCtx(id){
+  var m=await getMem(id);
+  if(!m.exchanges||!m.exchanges.length)return '';
+  var c='\n\nPAST MEMORY: You have spoken with Jena '+m.count+' times. Recent context:\n';
+  m.exchanges.slice(-4).forEach(function(e){c+='- ['+e.date+'] '+e.user.substring(0,100)+'\n';});
+  return c;
+}
+
+function renderSidebar(){
+  var list=document.getElementById('agent-list');
+  var chips=document.getElementById('welcome-chips');
+  list.innerHTML='';chips.innerHTML='';
+  agents.forEach(function(a){
+    var item=document.createElement('div');
+    item.className='agent-item';
+    item.id='ai-'+a.id;
+    item.onclick=function(){openAgent(a.id);};
+    var c=document.createElement('canvas');
+    c.className='agent-canvas';c.width=48;c.height=48;
+    item.appendChild(c);
+    var info=document.createElement('div');
+    info.className='agent-info';
+    info.innerHTML='<div class="agent-item-name" style="color:'+a.color+'">'+a.name+'</div><div class="agent-item-role">'+a.role+'</div>';
+    item.appendChild(info);
+    var dot=document.createElement('div');dot.className='agent-status';
+    item.appendChild(dot);
+    list.appendChild(item);
+    startAnimation(a.id+'_sb',c,48);
+    var agent=a;
+    (function(ag,canvas){
+      var t2=0;
+      function loop2(){
+        ag.draw(canvas.getContext('2d'),48,48,t2++);
+        requestAnimationFrame(loop2);
+      }
+      loop2();
+    })(a,c);
+
+    var chip=document.createElement('div');
+    chip.className='welcome-chip';
+    chip.onclick=function(){openAgent(a.id);};
+    var cc=document.createElement('canvas');
+    cc.style.width='22px';cc.style.height='22px';cc.style.borderRadius='6px';
+    cc.width=44;cc.height=44;
+    chip.appendChild(cc);
+    var sp=document.createElement('span');sp.textContent=a.name;
+    chip.appendChild(sp);
+    chips.appendChild(chip);
+    (function(ag2,c2){
+      var t3=0;
+      function loop3(){ag2.draw(c2.getContext('2d'),44,44,t3++);requestAnimationFrame(loop3);}
+      loop3();
+    })(a,cc);
+  });
+}
+
+async function openAgent(id){
+  currentAgent=agents.find(function(a){return a.id===id;});
+  history=[];
+  document.getElementById('welcome').style.display='none';
+  var cv=document.getElementById('chat-view');cv.style.display='flex';
+  document.querySelectorAll('.agent-item').forEach(function(el){el.classList.remove('active');el.style.borderColor='transparent';});
+  var item=document.getElementById('ai-'+id);
+  if(item){item.classList.add('active');item.style.borderColor=currentAgent.color+'50';}
+  var hdr=document.getElementById('chat-header');
+  var hc=document.createElement('canvas');
+  hc.className='chat-agent-canvas';hc.width=88;hc.height=88;
+  hdr.innerHTML='';hdr.appendChild(hc);
+  var inf=document.createElement('div');
+  inf.innerHTML='<div class="chat-agent-name" style="color:'+currentAgent.color+'">'+currentAgent.name+'</div><div class="chat-agent-role">'+currentAgent.role+' Agent</div>';
+  hdr.appendChild(inf);
+  var tag=document.createElement('span');tag.className='tag-collab';tag.textContent='+ Team up';tag.onclick=openCollabModal;
+  hdr.appendChild(tag);
+  (function(ag,canvas){var t=0;function loop(){ag.draw(canvas.getContext('2d'),88,88,t++);requestAnimationFrame(loop);}loop();})(currentAgent,hc);
+  document.getElementById('messages').innerHTML='';
+  var qr=document.getElementById('quick-row');qr.innerHTML='';
+  currentAgent.qr.forEach(function(r){
+    var b=document.createElement('button');b.className='qr';b.textContent=r;
+    b.onclick=function(){sendWithText(r);};qr.appendChild(b);
+  });
+  var mem=await getMem(id);
+  var greeting=mem.count>0?'Welcome back! We\'ve chatted '+mem.count+' times before — I remember our work. '+currentAgent.daily:currentAgent.daily;
+  setTimeout(function(){addMsg(greeting,'agent',currentAgent);},350);
+}
+
+function addMsg(text,type,agent){
+  var msgs=document.getElementById('messages');
+  var msg=document.createElement('div');msg.className='msg '+type;
+  if(type==='agent'&&agent){
+    var meta=document.createElement('div');meta.className='msg-meta';
+    var mc=document.createElement('canvas');mc.className='mini-canvas';mc.width=40;mc.height=40;
+    meta.appendChild(mc);
+    var ns=document.createElement('span');ns.className='msg-sender';ns.style.color=agent.color;ns.textContent=agent.name;
+    meta.appendChild(ns);msg.appendChild(meta);
+    (function(ag,c){var t=0;function loop(){ag.draw(c.getContext('2d'),40,40,t++);requestAnimationFrame(loop);}loop();})(agent,mc);
+  }
+  var bubble=document.createElement('div');bubble.className='bubble';
+  bubble.innerHTML=text.replace(/\n/g,'<br>');
+  var time=document.createElement('div');time.className='msg-time';
+  time.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  msg.appendChild(bubble);msg.appendChild(time);
+  msgs.appendChild(msg);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function addCollabMsg(text,agentId){
+  var agent=agents.find(function(a){return a.id===agentId;});
+  var msgs=document.getElementById('messages');
+  var msg=document.createElement('div');msg.className='msg collab';
+  var meta=document.createElement('div');meta.className='msg-meta';
+  var mc=document.createElement('canvas');mc.className='mini-canvas';mc.width=40;mc.height=40;
+  meta.appendChild(mc);
+  var ns=document.createElement('span');ns.className='msg-sender';ns.style.color=agent.color;ns.textContent=agent.name+' ('+agent.role+')';
+  meta.appendChild(ns);msg.appendChild(meta);
+  (function(ag,c){var t=0;function loop(){ag.draw(c.getContext('2d'),40,40,t++);requestAnimationFrame(loop);}loop();})(agent,mc);
+  var bubble=document.createElement('div');bubble.className='bubble';
+  bubble.innerHTML='<div class="collab-label">Team contribution</div>'+text.replace(/\n/g,'<br>');
+  var time=document.createElement('div');time.className='msg-time';
+  time.textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+  msg.appendChild(bubble);msg.appendChild(time);msgs.appendChild(msg);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showTyping(id){
+  var agent=agents.find(function(a){return a.id===id;});
+  if(!agent)return;
+  var msgs=document.getElementById('messages');
+  var row=document.createElement('div');row.className='typing-row';row.id='typ-'+id;
+  var mc=document.createElement('canvas');mc.style.width='20px';mc.style.height='20px';mc.style.borderRadius='6px';mc.width=40;mc.height=40;
+  row.appendChild(mc);
+  var tb=document.createElement('div');tb.className='typing-bubble';
+  for(var i=0;i<3;i++){var d=document.createElement('span');d.className='tdot';d.style.background=agent.color;tb.appendChild(d);}
+  row.appendChild(tb);msgs.appendChild(row);msgs.scrollTop=msgs.scrollHeight;
+  (function(ag,c){var t=0;function loop(){ag.draw(c.getContext('2d'),40,40,t++);if(document.getElementById('typ-'+id))requestAnimationFrame(loop);}loop();})(agent,mc);
+}
+
+function removeTyping(id){var t=document.getElementById('typ-'+id);if(t)t.remove();}
+
+async function sendMsg(){
+  var input=document.getElementById('msg-input');
+  var text=input.value.trim();
+  if(!text||!currentAgent)return;
+  input.value='';sendWithText(text);
+}
+
+async function sendWithText(text){
+  if(!currentAgent)return;
+  document.getElementById('quick-row').innerHTML='';
+  addMsg(text,'user',null);
+  history.push({role:'user',content:text});
+  showTyping(currentAgent.id);
+  var mc=await memCtx(currentAgent.id);
+  fetch(API,{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':AKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:1000,system:currentAgent.system+'\n\n'+BIZ+mc,messages:history})
+  })
+  .then(function(r){return r.json();})
+  .then(async function(d){
+    removeTyping(currentAgent.id);
+    if(d.error){addMsg('Error: '+d.error.message,'agent',currentAgent);return;}
+    var reply=d.content[0].text;
+    history.push({role:'assistant',content:reply});
+    addMsg(reply,'agent',currentAgent);
+    var mem=await getMem(currentAgent.id);
+    mem.count=(mem.count||0)+1;
+    if(!mem.exchanges)mem.exchanges=[];
+    mem.exchanges.push({date:new Date().toLocaleDateString(),user:text.substring(0,120)});
+    if(mem.exchanges.length>10)mem.exchanges=mem.exchanges.slice(-10);
+    await setMem(currentAgent.id,mem);
+  })
+  .catch(function(e){removeTyping(currentAgent.id);addMsg('Error: '+e.message,'agent',currentAgent);});
+}
+
+function renderCollabSelect(){
+  var sel=document.getElementById('collab-select');sel.innerHTML='';collabAgents=[];
+  agents.forEach(function(a){
+    var opt=document.createElement('div');opt.className='collab-opt';opt.id='co-'+a.id;
+    opt.onclick=function(){toggleCA(a.id,opt);};
+    var cc=document.createElement('canvas');cc.width=48;cc.height=48;cc.style.width='24px';cc.style.height='24px';cc.style.borderRadius='7px';
+    opt.appendChild(cc);
+    var sp=document.createElement('span');sp.textContent=a.name+' — '+a.role;opt.appendChild(sp);
+    sel.appendChild(opt);
+    (function(ag,c){var t=0;function loop(){ag.draw(c.getContext('2d'),48,48,t++);requestAnimationFrame(loop);}loop();})(a,cc);
+  });
+}
+
+function toggleCA(id,el){
+  var idx=collabAgents.indexOf(id);
+  if(idx===-1){if(collabAgents.length>=4){alert('Max 4 agents!');return;}collabAgents.push(id);el.classList.add('selected');}
+  else{collabAgents.splice(idx,1);el.classList.remove('selected');}
+}
+
+function openCollabModal(){renderCollabSelect();document.getElementById('collab-overlay').classList.add('open');}
+function closeCollab(){document.getElementById('collab-overlay').classList.remove('open');}
+function closeCollabOutside(e){if(e.target===document.getElementById('collab-overlay'))closeCollab();}
+
+async function startCollab(){
+  if(collabAgents.length<2){alert('Select at least 2 agents.');return;}
+  var topic=document.getElementById('collab-topic').value.trim();
+  if(!topic){alert('Describe what the team should work on.');return;}
+  closeCollab();
+  document.getElementById('welcome').style.display='none';
+  var cv=document.getElementById('chat-view');cv.style.display='flex';
+  document.getElementById('messages').innerHTML='';document.getElementById('quick-row').innerHTML='';
+  var hdr=document.getElementById('chat-header');
+  hdr.innerHTML='';
+  var avatarRow=document.createElement('div');avatarRow.style.cssText='display:flex;gap:4px;';
+  collabAgents.forEach(function(id){
+    var a=agents.find(function(ag){return ag.id===id;});
+    var cc=document.createElement('canvas');cc.style.width='32px';cc.style.height='32px';cc.style.borderRadius='8px';cc.width=64;cc.height=64;
+    avatarRow.appendChild(cc);
+    (function(ag,c){var t=0;function loop(){ag.draw(c.getContext('2d'),64,64,t++);requestAnimationFrame(loop);}loop();})(a,cc);
+  });
+  hdr.appendChild(avatarRow);
+  var names=collabAgents.map(function(id){return agents.find(function(a){return a.id===id;}).name;}).join(', ');
+  var inf=document.createElement('div');
+  inf.innerHTML='<div class="chat-agent-name">Team Collaboration</div><div class="chat-agent-role">'+names+'</div>';
+  hdr.appendChild(inf);
+  var tag=document.createElement('span');tag.className='tag-collab';tag.textContent='Live session';hdr.appendChild(tag);
+
+  addMsg(topic,'user',null);
+  var collabHistory=topic;
+  for(var i=0;i<collabAgents.length;i++){
+    var agentId=collabAgents[i];
+    var agent=agents.find(function(a){return a.id===agentId;});
+    await new Promise(function(res){setTimeout(res,400*(i+1));});
+    showTyping(agentId);
+    var prev=i===0?'':'\n\nYour teammates already said:\n'+collabHistory;
+    var prompt='The team is collaborating on: "'+topic+'"'+prev+'\n\nAdd YOUR perspective as '+agent.name+' ('+agent.role+'). Build on what others said, add your unique angle. Be concise (3-5 sentences). Stay in character.';
+    try{
+      var mc2=await memCtx(agentId);
+      var resp=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:500,system:agent.system+'\n\n'+BIZ+mc2,messages:[{role:'user',content:prompt}]})});
+      var data=await resp.json();
+      removeTyping(agentId);
+      if(data.content&&data.content[0]){
+        var reply=data.content[0].text;
+        addCollabMsg(reply,agentId);
+        collabHistory+='\n\n'+agent.name+' said: '+reply;
+      }
+    }catch(e){removeTyping(agentId);}
+  }
+  await new Promise(function(res){setTimeout(res,600);});
+  var synthRow=document.createElement('div');synthRow.className='typing-row';synthRow.id='typ-synth';
+  var synthDot=document.createElement('div');synthDot.style.cssText='width:20px;height:20px;border-radius:6px;background:#1a1a2e;display:flex;align-items:center;justify-content:center;font-size:11px;color:white;';synthDot.textContent='🤝';
+  var tb2=document.createElement('div');tb2.className='typing-bubble';
+  for(var j=0;j<3;j++){var dd=document.createElement('span');dd.className='tdot';tb2.appendChild(dd);}
+  synthRow.appendChild(synthDot);synthRow.appendChild(tb2);
+  document.getElementById('messages').appendChild(synthRow);
+  document.getElementById('messages').scrollTop=99999;
+  try{
+    var sp='Your team collaborated on: "'+topic+'"\n\nWhat everyone said:\n'+collabHistory+'\n\nWrite a brief team synthesis: the 2-3 most important action items for Jena. Direct and practical.';
+    var sr=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':AKEY,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:400,system:'You are the Stockwise AI team synthesizing a collaboration. Be direct, practical, action-oriented. '+BIZ,messages:[{role:'user',content:sp}]})});
+    var sd=await sr.json();
+    var st=document.getElementById('typ-synth');if(st)st.remove();
+    if(sd.content&&sd.content[0]){
+      var msgs2=document.getElementById('messages');
+      var sm=document.createElement('div');sm.className='msg collab';sm.style.maxWidth='95%';
+      var sb=document.createElement('div');sb.className='bubble';
+      sb.style.background='linear-gradient(135deg,'+agents.find(function(a){return a.id===collabAgents[0];}).color+','+agents.find(function(a){return a.id===collabAgents[collabAgents.length-1];}).color+')';
+      sb.innerHTML='<div class="collab-label">🤝 Team synthesis — action items</div>'+sd.content[0].text.replace(/\n/g,'<br>');
+      sm.appendChild(sb);msgs2.appendChild(sm);msgs2.scrollTop=99999;
+    }
+  }catch(e){var st2=document.getElementById('typ-synth');if(st2)st2.remove();}
+  currentAgent=agents.find(function(a){return a.id===collabAgents[0];});
+  history=[{role:'user',content:topic},{role:'assistant',content:'[Team collaboration on: '+topic+']'}];
+}
+
+document.getElementById('msg-input').addEventListener('keydown',function(e){if(e.key==='Enter')sendMsg();});
+renderSidebar();
+</script>
+</body>
+</html>

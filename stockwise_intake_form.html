@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Stockwise — Tell Us About Your Business</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal: #1D9E75;
+  --teal-light: #E1F5EE;
+  --teal-mid: #9FE1CB;
+  --teal-dark: #0F6E56;
+  --teal-deep: #085041;
+  --cream: #F7F5F0;
+  --cream-dark: #EDE9E0;
+  --border: #D8D4C8;
+  --text: #1C1C1A;
+  --text-muted: #6B6860;
+  --white: #FFFFFF;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  min-height: 100vh;
+  color: var(--text);
+  padding: 2rem 1rem 4rem;
+}
+
+.page-wrap {
+  max-width: 660px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 2.5rem;
+  animation: fadeUp 0.5s ease both;
+}
+
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 1.5rem;
+}
+
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  background: var(--teal);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-mark svg { width: 20px; height: 20px; fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+.logo-text {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+
+.header h1 {
+  font-family: 'Lora', serif;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+.header p {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 520px;
+}
+
+.progress-bar {
+  height: 3px;
+  background: var(--cream-dark);
+  border-radius: 2px;
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--teal);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  width: 25%;
+}
+
+.step { display: none; animation: fadeUp 0.35s ease both; }
+.step.active { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--teal-dark);
+  margin-bottom: 0.5rem;
+}
+
+.step h2 {
+  font-family: 'Lora', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+  line-height: 1.3;
+}
+
+.step-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.field { margin-bottom: 1.25rem; }
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.optional { font-weight: 400; color: var(--text-muted); margin-left: 4px; }
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select,
+textarea {
+  width: 100%;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--white);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  appearance: none;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(29,158,117,0.12);
+}
+
+input::placeholder, textarea::placeholder { color: #AEABA3; }
+
+textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236B6860' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 480px) { .two-col { grid-template-columns: 1fr; } }
+
+.checkbox-group, .radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.check-item, .radio-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  font-size: 14px;
+  color: var(--text);
+  user-select: none;
+}
+
+.check-item:hover, .radio-item:hover { border-color: var(--teal-mid); background: var(--teal-light); }
+.check-item.selected, .radio-item.selected { border-color: var(--teal); background: var(--teal-light); color: var(--teal-deep); }
+
+.check-item input, .radio-item input { display: none; }
+
+.check-box {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.check-item.selected .check-box {
+  background: var(--teal);
+  border-color: var(--teal);
+}
+
+.check-box svg { width: 11px; height: 11px; stroke: white; stroke-width: 2.5; fill: none; display: none; }
+.check-item.selected .check-box svg { display: block; }
+
+.radio-dot {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.radio-item.selected .radio-dot { border-color: var(--teal); }
+.radio-inner {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--teal);
+  display: none;
+}
+.radio-item.selected .radio-inner { display: block; }
+
+.scale-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.scale-btn {
+  width: 42px; height: 42px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scale-btn:hover { border-color: var(--teal-mid); color: var(--teal-dark); }
+.scale-btn.selected { background: var(--teal); border-color: var(--teal); color: white; }
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  padding: 0 2px;
+}
+
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  gap: 12px;
+}
+
+.btn-back {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s;
+}
+.btn-back:hover { color: var(--text); }
+
+.btn-next {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  background: var(--teal);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 11px 28px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.btn-next:hover { background: var(--teal-dark); }
+.btn-next:active { transform: scale(0.97); }
+
+.error-msg {
+  font-size: 12px;
+  color: #C0392B;
+  margin-top: 6px;
+  display: none;
+}
+
+.success-screen {
+  display: none;
+  text-align: center;
+  padding: 3rem 1rem;
+  animation: fadeUp 0.4s ease both;
+}
+
+.success-icon {
+  width: 64px; height: 64px;
+  background: var(--teal-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+
+.success-icon svg { width: 28px; height: 28px; stroke: var(--teal); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+.success-screen h2 {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 0.75rem;
+}
+
+.success-screen p {
+  font-size: 15px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  max-width: 400px;
+  margin: 0 auto 0.5rem;
+}
+
+.contact-line {
+  margin-top: 1.5rem;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.contact-line a { color: var(--teal-dark); text-decoration: none; }
+.contact-line a:hover { text-decoration: underline; }
+
+.summary-box {
+  background: var(--white);
+  border: 1px solid var(--cream-dark);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-top: 1.5rem;
+  text-align: left;
+}
+
+.summary-box h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.summary-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.summary-item { display: flex; gap: 6px; }
+.summary-label { color: var(--text-muted); min-width: 120px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="header">
+    <div class="logo-row">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+      </div>
+      <span class="logo-text">Stockwise</span>
+    </div>
+    <h1>Tell us about your business</h1>
+    <p>Fill this out before your free consultation and Jena will come prepared with ideas specific to your situation — no time wasted getting up to speed.</p>
+  </div>
+
+  <div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+
+  <div id="form-body">
+
+    <div class="step active" id="step-1">
+      <div class="step-label">Step 1 of 4</div>
+      <h2>Let's start with the basics</h2>
+      <p class="step-desc">Tell us who you are and how to reach you.</p>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="owner-name">Your name</label>
+          <input type="text" id="owner-name" placeholder="Jane Smith" />
+          <div class="error-msg" id="err-owner-name">Please enter your name.</div>
+        </div>
+        <div class="field">
+          <label for="biz-name">Business name</label>
+          <input type="text" id="biz-name" placeholder="Smith's Hardware" />
+          <div class="error-msg" id="err-biz-name">Please enter your business name.</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <label for="phone">Phone number</label>
+          <input type="tel" id="phone" placeholder="(262) 555-0100" />
+          <div class="error-msg" id="err-phone">Please enter your phone number.</div>
+        </div>
+        <div class="field">
+          <label for="email">Email <span class="optional">(optional)</span></label>
+          <input type="email" id="email" placeholder="jane@smithshardware.com" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="biz-type">Type of business</label>
+        <select id="biz-type">
+          <option value="">Select one…</option>
+          <option>Retail store</option>
+          <option>Restaurant / food service</option>
+          <option>Salon / spa / personal services</option>
+          <option>Medical / dental office</option>
+          <option>Auto / trades / repair</option>
+          <option>Office / professional services</option>
+          <option>Warehouse / distribution</option>
+          <option>Other</option>
+        </select>
+        <div class="error-msg" id="err-biz-type">Please select a business type.</div>
+      </div>
+
+      <div class="field">
+        <label for="num-employees">How many employees do you have?</label>
+        <select id="num-employees">
+          <option value="">Select one…</option>
+          <option>Just me</option>
+          <option>2–5</option>
+          <option>6–15</option>
+          <option>16–30</option>
+          <option>30+</option>
+        </select>
+      </div>
+
+      <div class="nav-row">
+        <span></span>
+        <button class="btn-next" onclick="goTo(2)">Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <div class="step" id="step-2">
+      <div class="step-label">Step 2 of 4</div>
+      <h2>What's giving you trouble?</h2>
+      <p class="step-desc">Select everything that applies — don't hold back. This helps Jena understand where to focus.</p>
+
+      <div class="field">
+        <label>Areas of concern <span class="optional">(select all that apply)</span></label>
+        <div class="checkbox-group" id="pain-points">
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="Inventory is disorganized or hard to track" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            Inventory is disorganized or hard to track
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="We don't have a reliable inventory system" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            We don't have a reliable inventory system
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="No written SOPs — everything lives in people's heads" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            No written SOPs — everything lives in people's heads
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="Workflows are inconsistent or unclear" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            Workflows are inconsistent or unclear
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="Hiring and onboarding is unstructured" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            Hiring and onboarding is unstructured
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="Back-office tasks are piling up" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            Back-office tasks are piling up
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="We're losing time to inefficient daily processes" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            We're losing time to inefficient daily processes
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="Something else" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            Something else
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="biggest-pain">In your own words, what's the biggest thing slowing your business down? <span class="optional">(optional)</span></label>
+        <textarea id="biggest-pain" placeholder="e.g. We have no idea what stock we actually have on hand — we find out we're out of something when a customer asks for it…"></textarea>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back" onclick="goTo(1)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>
+        <button class="btn-next" onclick="goTo(3)">Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <div class="step" id="step-3">
+      <div class="step-label">Step 3 of 4</div>
+      <h2>A little more context</h2>
+      <p class="step-desc">Help Jena understand the shape of the problem before she arrives.</p>
+
+      <div class="field">
+        <label>How long have these issues been going on?</label>
+        <div class="radio-group" id="duration">
+          <label class="radio-item" onclick="toggleRadio(this, 'duration')">
+            <input type="radio" name="duration" value="Just started noticing" />
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            Just started noticing
+          </label>
+          <label class="radio-item" onclick="toggleRadio(this, 'duration')">
+            <input type="radio" name="duration" value="A few months" />
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            A few months
+          </label>
+          <label class="radio-item" onclick="toggleRadio(this, 'duration')">
+            <input type="radio" name="duration" value="Over a year" />
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            Over a year
+          </label>
+          <label class="radio-item" onclick="toggleRadio(this, 'duration')">
+            <input type="radio" name="duration" value="Since the business started" />
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            Since the business started
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>On a scale of 1–5, how much is this affecting your day-to-day? <span class="optional">(1 = minor nuisance, 5 = serious problem)</span></label>
+        <div class="scale-row" id="severity-scale">
+          <button class="scale-btn" onclick="selectScale(this, 'severity-scale')">1</button>
+          <button class="scale-btn" onclick="selectScale(this, 'severity-scale')">2</button>
+          <button class="scale-btn" onclick="selectScale(this, 'severity-scale')">3</button>
+          <button class="scale-btn" onclick="selectScale(this, 'severity-scale')">4</button>
+          <button class="scale-btn" onclick="selectScale(this, 'severity-scale')">5</button>
+        </div>
+        <div class="scale-labels"><span>Minor nuisance</span><span>Serious problem</span></div>
+      </div>
+
+      <div class="field">
+        <label>Have you tried to fix these issues before?</label>
+        <div class="radio-group" id="tried-before">
+          <label class="radio-item" onclick="toggleRadio(this, 'tried-before')">
+            <input type="radio" name="tried" value="No, this is our first attempt" />
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            No, this is our first attempt
+          </label>
+          <label class="radio-item" onclick="toggleRadio(this, 'tried-before')">
+            <input type="radio" name="tried" value="Yes, but it didn't stick" />
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            Yes, but it didn't stick
+          </label>
+          <label class="radio-item" onclick="toggleRadio(this, 'tried-before')">
+            <input type="radio" name="tried" value="We have some things in place but need help improving" />
+            <div class="radio-dot"><div class="radio-inner"></div></div>
+            We have some things in place but need help improving
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="tried-desc">If you've tried something before, what happened? <span class="optional">(optional)</span></label>
+        <textarea id="tried-desc" placeholder="e.g. We bought a spreadsheet template online but nobody ended up using it consistently…"></textarea>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back" onclick="goTo(2)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>
+        <button class="btn-next" onclick="goTo(4)">Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+    <div class="step" id="step-4">
+      <div class="step-label">Step 4 of 4</div>
+      <h2>Goals & availability</h2>
+      <p class="step-desc">Almost done — just a few final questions to help Jena prepare.</p>
+
+      <div class="field">
+        <label>What does success look like to you? <span class="optional">(select all that apply)</span></label>
+        <div class="checkbox-group" id="goals">
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="My team can find what they need without asking me" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            My team can find what they need without asking me
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="We have written processes the whole team follows" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            We have written processes the whole team follows
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="Inventory is accurate and easy to maintain" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            Inventory is accurate and easy to maintain
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="New hires get up to speed quickly and consistently" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            New hires get up to speed quickly and consistently
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="I spend less time on operational firefighting" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            I spend less time on operational firefighting
+          </label>
+          <label class="check-item" onclick="toggleCheck(this)">
+            <input type="checkbox" value="The business can run smoothly without me there every minute" />
+            <div class="check-box"><svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg></div>
+            The business can run smoothly without me there every minute
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="timeline">When are you hoping to get started?</label>
+        <select id="timeline">
+          <option value="">Select one…</option>
+          <option>As soon as possible</option>
+          <option>Within the next month</option>
+          <option>In the next 1–3 months</option>
+          <option>Just exploring for now</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="best-time">Best time for Jena to reach you</label>
+        <select id="best-time">
+          <option value="">Select one…</option>
+          <option>Mornings (before noon)</option>
+          <option>Afternoons (noon–5pm)</option>
+          <option>Evenings (after 5pm)</option>
+          <option>Anytime</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="anything-else">Anything else you'd like Jena to know before your consultation? <span class="optional">(optional)</span></label>
+        <textarea id="anything-else" placeholder="Share anything that might help Jena prepare — quirks of your business, specific concerns, or questions you already have…"></textarea>
+      </div>
+
+      <div class="nav-row">
+        <button class="btn-back" onclick="goTo(3)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Back</button>
+        <button class="btn-next" onclick="submitForm()">Submit <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="success-screen" id="success">
+    <div class="success-icon">
+      <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>You're all set!</h2>
+    <p>Thanks for taking the time to fill this out. Jena will review your answers before your consultation so you can hit the ground running.</p>
+    <p>Expect to hear from her within one business day.</p>
+    <div class="contact-line">
+      Questions in the meantime? Reach Jena at <a href="tel:2622780216">(262) 278-0216</a> or <a href="mailto:stockwiseforyou@gmail.com">stockwiseforyou@gmail.com</a>
+    </div>
+    <div class="summary-box">
+      <h3>Your submission</h3>
+      <div class="summary-row" id="summary-content"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStep = 1;
+const totalSteps = 4;
+
+function goTo(step) {
+  if (step > currentStep && !validate(currentStep)) return;
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  currentStep = step;
+  document.getElementById('step-' + currentStep).classList.add('active');
+  const pct = (step / totalSteps) * 100;
+  document.getElementById('progress').style.width = pct + '%';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function validate(step) {
+  let valid = true;
+  if (step === 1) {
+    const fields = [
+      { id: 'owner-name', err: 'err-owner-name' },
+      { id: 'biz-name', err: 'err-biz-name' },
+      { id: 'phone', err: 'err-phone' },
+      { id: 'biz-type', err: 'err-biz-type' }
+    ];
+    fields.forEach(f => {
+      const el = document.getElementById(f.id);
+      const err = document.getElementById(f.err);
+      if (!el.value.trim()) {
+        err.style.display = 'block';
+        el.style.borderColor = '#E74C3C';
+        valid = false;
+      } else {
+        err.style.display = 'none';
+        el.style.borderColor = '';
+      }
+    });
+  }
+  return valid;
+}
+
+function toggleCheck(label) {
+  label.classList.toggle('selected');
+  const cb = label.querySelector('input[type="checkbox"]');
+  if (cb) cb.checked = !cb.checked;
+}
+
+function toggleRadio(label, groupId) {
+  document.querySelectorAll('#' + groupId + ' .radio-item').forEach(r => r.classList.remove('selected'));
+  label.classList.add('selected');
+  const rb = label.querySelector('input[type="radio"]');
+  if (rb) rb.checked = true;
+}
+
+function selectScale(btn, groupId) {
+  document.querySelectorAll('#' + groupId + ' .scale-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+function getChecked(groupId) {
+  return Array.from(document.querySelectorAll('#' + groupId + ' .check-item.selected input'))
+    .map(i => i.value).join(', ');
+}
+
+function getRadio(groupId) {
+  const sel = document.querySelector('#' + groupId + ' .radio-item.selected input');
+  return sel ? sel.value : '';
+}
+
+function getScale(groupId) {
+  const sel = document.querySelector('#' + groupId + ' .scale-btn.selected');
+  return sel ? sel.textContent : '';
+}
+
+function submitForm() {
+  if (!validate(4)) return;
+
+  const data = {
+    'Name': document.getElementById('owner-name').value,
+    'Business': document.getElementById('biz-name').value,
+    'Phone': document.getElementById('phone').value,
+    'Email': document.getElementById('email').value || '—',
+    'Business type': document.getElementById('biz-type').value,
+    'Team size': document.getElementById('num-employees').value,
+    'Pain points': getChecked('pain-points') || '—',
+    'Biggest challenge': document.getElementById('biggest-pain').value || '—',
+    'Duration': getRadio('duration') || '—',
+    'Severity': getScale('severity-scale') ? getScale('severity-scale') + ' / 5' : '—',
+    'Tried before': getRadio('tried-before') || '—',
+    'Previous attempts': document.getElementById('tried-desc').value || '—',
+    'Goals': getChecked('goals') || '—',
+    'Timeline': document.getElementById('timeline').value || '—',
+    'Best time to call': document.getElementById('best-time').value || '—',
+    'Additional notes': document.getElementById('anything-else').value || '—'
+  };
+
+  document.getElementById('form-body').style.display = 'none';
+  document.getElementById('success').style.display = 'block';
+  document.querySelector('.progress-fill').style.width = '100%';
+
+  const summary = document.getElementById('summary-content');
+  summary.innerHTML = '';
+  Object.entries(data).forEach(([k, v]) => {
+    const row = document.createElement('div');
+    row.className = 'summary-item';
+    row.innerHTML = `<span class="summary-label">${k}</span><span>${v}</span>`;
+    summary.appendChild(row);
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
