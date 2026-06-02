@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Stockwise — AI Agents</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--teal:#1D9E75;--teal-dark:#0F6E56;--teal-deep:#085041;--teal-light:#E1F5EE;--orange:#F97316;--cream:#F7F4EE;--border:#D8D0C0;--text:#1C1814;--muted:#6B6358;--white:#FDFCFA;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh;}
+header{background:var(--teal-deep);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:white;letter-spacing:-0.5px;}
+.logo-sub{font-size:11px;color:#9FE1CB;}
+.badge{font-size:11px;background:rgba(255,255,255,0.1);color:#9FE1CB;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,0.2);}
+
+/* GRID */
+#grid-view{padding:2rem;display:block;}
+.page-title{font-family:'Fraunces',serif;font-size:22px;font-weight:600;margin-bottom:.3rem;}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:1.5rem;}
+.select-bar{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
+.select-info{font-size:13px;color:var(--muted);}
+.collab-btn{background:var(--teal);color:white;border:none;border-radius:8px;padding:9px 18px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+.collab-btn:disabled{background:var(--border);cursor:not-allowed;}
+.collab-btn:not(:disabled):hover{background:var(--teal-dark);}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;}
+.acard{background:var(--white);border:2px solid var(--border);border-radius:16px;padding:1.25rem 1rem;text-align:center;cursor:pointer;transition:transform .15s,border-color .15s;}
+.acard:hover{transform:translateY(-3px);}
+.acard.sel{border-width:3px;}
+.acard canvas{display:block;margin:0 auto 10px;border-radius:10px;}
+.acard-name{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin-bottom:2px;}
+.acard-role{font-size:11px;color:var(--muted);margin-bottom:8px;}
+.acard-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:10px;}
+.chat-btn{width:100%;background:var(--teal);color:white;border:none;border-radius:8px;padding:8px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;}
+.chat-btn:hover{opacity:.85;}
+
+/* CHAT */
+#chat-view{display:none;flex-direction:column;height:calc(100vh - 64px);}
+.chat-header{background:var(--white);border-bottom:1px solid var(--border);padding:.75rem 1.5rem;display:flex;align-items:center;gap:10px;}
+.back{background:none;border:none;font-size:13px;color:var(--muted);cursor:pointer;padding:6px 10px;border-radius:8px;}
+.back:hover{background:var(--cream);}
+.chat-avs{display:flex;gap:4px;}
+.chat-av{width:38px;height:38px;border-radius:10px;}
+.chat-info-name{font-family:'Fraunces',serif;font-size:15px;font-weight:600;}
+.chat-info-sub{font-size:11px;color:var(--muted);}
+.msgs{flex:1;overflow-y:auto;padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:10px;}
+.msgs::-webkit-scrollbar{width:4px;}
+.msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.msg{max-width:80%;display:flex;flex-direction:column;}
+.msg.u{align-self:flex-end;}
+.msg.b{align-self:flex-start;}
+.msg.co{align-self:flex-start;max-width:88%;}
+.mmeta{display:flex;align-items:center;gap:6px;margin-bottom:3px;}
+.mav{width:20px;height:20px;border-radius:6px;flex-shrink:0;}
+.mwho{font-size:11px;font-weight:500;}
+.bub{padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.65;}
+.msg.u .bub{background:var(--teal);color:white;border-bottom-right-radius:4px;}
+.msg.b .bub{background:var(--white);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px;}
+.msg.co .bub{background:#1a1a2e;color:white;border-bottom-left-radius:4px;}
+.ctag{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#9FE1CB;margin-bottom:3px;}
+.mtime{font-size:11px;color:var(--muted);margin-top:2px;padding:0 3px;}
+.msg.u .mtime{text-align:right;}
+.trow{display:flex;align-items:center;gap:8px;align-self:flex-start;}
+.tbub{background:var(--white);border:1px solid var(--border);border-radius:16px;border-bottom-left-radius:4px;padding:10px 14px;display:flex;gap:4px;}
+@keyframes bob{0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-4px);}}
+.tdot{width:6px;height:6px;border-radius:50%;animation:bob 1.2s infinite;}
+.tdot:nth-child(2){animation-delay:.2s;}.tdot:nth-child(3){animation-delay:.4s;}
+.input-area{background:var(--white);border-top:1px solid var(--border);padding:.75rem 1.5rem;display:flex;gap:8px;}
+.msgin{flex:1;font-family:'DM Sans',sans-serif;font-size:14px;border:1.5px solid var(--border);border-radius:22px;padding:9px 16px;outline:none;background:var(--cream);}
+.msgin:focus{border-color:var(--teal);background:var(--white);}
+.sendbtn{width:38px;height:38px;border-radius:50%;border:none;background:var(--teal);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sendbtn:hover{background:var(--teal-dark);}
+.sendbtn svg{width:15px;height:15px;fill:white;}
+@media(max-width:500px){.grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="logo">Stockwise Agents</div>
+    <div class="logo-sub">Your AI team — powered by Claude</div>
+  </div>
+  <div class="badge">Jena &amp; Team</div>
+</header>
+
+<div id="grid-view">
+  <div class="page-title">Your AI team</div>
+  <p class="page-sub">Click an agent card to chat one-on-one. Or select multiple cards then start a team collaboration.</p>
+  <div class="select-bar">
+    <span class="select-info" id="sel-info">Click cards to select for team collab</span>
+    <button class="collab-btn" id="collab-btn" disabled onclick="startCollab()">Start team collab →</button>
+  </div>
+  <div class="grid" id="agent-grid"></div>
+</div>
+
+<div id="chat-view">
+  <div class="chat-header">
+    <button class="back" onclick="goBack()">← Back</button>
+    <div class="chat-avs" id="chat-avs"></div>
+    <div>
+      <div class="chat-info-name" id="chat-iname"></div>
+      <div class="chat-info-sub" id="chat-isub"></div>
+    </div>
+  </div>
+  <div class="msgs" id="msgs"></div>
+  <div class="input-area">
+    <input class="msgin" id="msgin" placeholder="Type your message..." onkeydown="if(event.key==='Enter')send()"/>
+    <button class="sendbtn" onclick="send()">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+// ---- API KEY ----
+var P1 = 'sk-ant-api03-uHXwPiwzGmJgNm4-lUl7kOPMArxI_tJqk';
+var P2 = 'UUtkgpsgRU3wL-ae3ddkrBf_3_hscI6Vqrsp2uqn8REiU5kV5lpNw-7_8rsgAA';
+var KEY = P1 + P2;
+var API = 'https://api.anthropic.com/v1/messages';
+var BIZ = 'You work for Stockwise, run by Jena Imse in Southeast Wisconsin. Services: inventory cleanup, inventory system setup, SOP development, workflow design, standardized hiring processes, operations audits, small-task support. Promise: No software to buy, no monthly fees ever. Contact: (262) 278-0216, stockwiseforyou@gmail.com. Team: Jena and a small team.';
+
+// ---- AGENTS ----
+var AGENTS = [
+  {
+    id:'rex', name:'Rex', role:'Lead Finder', color:'#F97316', bg:'#FFF0E6',
+    desc:'Finds & scores SE Wisconsin leads, writes personalized outreach.',
+    persona:'You are Rex, a witty sharp lead finder for Stockwise. You are like a clever fox — quick, resourceful, a little cheeky. Find local SE Wisconsin businesses, score them 1-5 on fit, find contact info, and write outreach in Jena\'s warm friendly voice. At the start of each new conversation ask one casual question to understand what kind of leads Jena needs most right now before diving in.',
+    draw:function(cx,w,h,t){
+      var g=cx.getContext('2d'),s=w/100;g.clearRect(0,0,w,h);
+      var b=Math.sin(t*.03)*2;
+      g.fillStyle='#F97316';g.beginPath();g.ellipse(50*s,(68+b)*s,22*s,25*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#FED7AA';g.beginPath();g.ellipse(50*s,(66+b)*s,15*s,17*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#F97316';
+      g.beginPath();g.moveTo(32*s,(38+b)*s);g.lineTo(38*s,(58+b)*s);g.lineTo(22*s,(56+b)*s);g.closePath();g.fill();
+      g.beginPath();g.moveTo(68*s,(38+b)*s);g.lineTo(62*s,(58+b)*s);g.lineTo(78*s,(56+b)*s);g.closePath();g.fill();
+      g.fillStyle='#FCD5A8';
+      g.beginPath();g.moveTo(32*s,(38+b)*s);g.lineTo(36*s,(50+b)*s);g.lineTo(27*s,(50+b)*s);g.closePath();g.fill();
+      g.beginPath();g.moveTo(68*s,(38+b)*s);g.lineTo(64*s,(50+b)*s);g.lineTo(73*s,(50+b)*s);g.closePath();g.fill();
+      g.fillStyle='#F97316';g.beginPath();g.ellipse(50*s,(42+b)*s,18*s,16*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#FCD5A8';g.beginPath();g.ellipse(50*s,(43+b)*s,12*s,11*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#1C1814';
+      g.beginPath();g.arc(44*s,(41+b)*s,2.8*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(56*s,(41+b)*s,2.8*s,0,Math.PI*2);g.fill();
+      g.fillStyle='white';
+      g.beginPath();g.arc(45*s,(40+b)*s,1.1*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(57*s,(40+b)*s,1.1*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#FDA272';g.beginPath();g.ellipse(50*s,(46+b)*s,4*s,2.5*s,0,0,Math.PI*2);g.fill();
+      g.strokeStyle='#C2410C';g.lineWidth=1.5*s;g.lineCap='round';
+      g.beginPath();g.arc(50*s,(48+b)*s,4*s,.15,Math.PI-.15);g.stroke();
+      g.fillStyle='#F97316';
+      var tl=Math.sin(t*.05)*.25;
+      g.beginPath();g.ellipse(50*s,88*s,7*s,5*s,tl,0,Math.PI*2);g.fill();
+      g.fillStyle='#FCD5A8';
+      g.beginPath();g.ellipse(33*s,70*s,5*s,8*s,.2,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(67*s,70*s,5*s,8*s,-.2,0,Math.PI*2);g.fill();
+    }
+  },
+  {
+    id:'nova', name:'Nova', role:'Social Media', color:'#8B5CF6', bg:'#F3EEFF',
+    desc:'Writes posts, captions, calendars and replies in Jena\'s voice.',
+    persona:'You are Nova, a creative enthusiastic social media agent for Stockwise. Your personality is bright and energetic like a glowing star. Write Facebook and Instagram posts, captions, hashtags, content calendars, and replies to comments and DMs — all in Jena\'s warm friendly voice. At the start of each conversation ask one question about what\'s happening in the business so your content feels timely and real.',
+    draw:function(cx,w,h,t){
+      var g=cx.getContext('2d'),s=w/100;g.clearRect(0,0,w,h);
+      var p=Math.sin(t*.04)*3;
+      g.fillStyle='rgba(139,92,246,.15)';g.beginPath();g.arc(50*s,44*s,(26+p)*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#8B5CF6';g.beginPath();g.arc(50*s,44*s,20*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#C4B5FD';
+      for(var i=0;i<5;i++){
+        var a=(i/5)*Math.PI*2-Math.PI/2+t*.02;
+        var x1=50*s+Math.cos(a)*7*s,y1=44*s+Math.sin(a)*7*s;
+        var xl=50*s+Math.cos(a+.4*Math.PI)*17*s,yl=44*s+Math.sin(a+.4*Math.PI)*17*s;
+        var xr=50*s+Math.cos(a-.4*Math.PI)*17*s,yr=44*s+Math.sin(a-.4*Math.PI)*17*s;
+        g.beginPath();g.moveTo(50*s,44*s);g.lineTo(x1,y1);g.lineTo(xl,yl);g.closePath();g.fill();
+        g.beginPath();g.moveTo(50*s,44*s);g.lineTo(x1,y1);g.lineTo(xr,yr);g.closePath();g.fill();
+      }
+      g.fillStyle='white';g.beginPath();g.arc(50*s,44*s,6*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#7C3AED';g.beginPath();g.arc(50*s,44*s,3*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#8B5CF6';g.beginPath();g.ellipse(50*s,72*s,12*s,11*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#C4B5FD';g.beginPath();g.ellipse(50*s,70*s,8*s,7*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#1C1814';
+      g.beginPath();g.arc(46*s,69*s,2*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(54*s,69*s,2*s,0,Math.PI*2);g.fill();
+      g.strokeStyle='#5B21B6';g.lineWidth=1.5*s;g.lineCap='round';
+      g.beginPath();g.arc(50*s,72*s,3*s,.2,Math.PI-.2);g.stroke();
+      g.fillStyle='#8B5CF6';
+      g.beginPath();g.ellipse(38*s,82*s,5*s,8*s,.3,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(62*s,82*s,5*s,8*s,-.3,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(50*s,90*s,7*s,5*s,0,0,Math.PI);g.fill();
+    }
+  },
+  {
+    id:'spark', name:'Spark', role:'Business Ideas', color:'#CA8A04', bg:'#FEFCE8',
+    desc:'Generates and stress-tests ideas for growth and new services.',
+    persona:'You are Spark, a sharp business idea agent for Stockwise. Your personality is enthusiastic but grounded — you love big ideas but always run them through a reality filter. Generate and evaluate business ideas, spot market gaps in SE Wisconsin, think through new services Stockwise could offer. At the start of each conversation ask one question about what problems or opportunities Jena has been thinking about.',
+    draw:function(cx,w,h,t){
+      var g=cx.getContext('2d'),s=w/100;g.clearRect(0,0,w,h);
+      var f=Math.sin(t*.1)*3;
+      g.fillStyle='rgba(234,179,8,.2)';g.beginPath();g.arc(50*s,38*s,(18+f)*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#FEF08A';g.beginPath();g.arc(50*s,37*s,17*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#EAB308';g.beginPath();g.arc(50*s,37*s,13*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#1C1814';
+      g.beginPath();g.arc(45*s,35*s,2.3*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(55*s,35*s,2.3*s,0,Math.PI*2);g.fill();
+      g.fillStyle='white';
+      g.beginPath();g.arc(46*s,34*s,.9*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(56*s,34*s,.9*s,0,Math.PI*2);g.fill();
+      g.strokeStyle='#92400E';g.lineWidth=2*s;g.lineCap='round';
+      g.beginPath();g.arc(50*s,39*s,4*s,.2,Math.PI-.2);g.stroke();
+      g.fillStyle='#EAB308';
+      g.beginPath();g.rect(43*s,52*s,14*s,9*s);g.fill();
+      g.fillStyle='#FDE047';g.beginPath();g.rect(43*s,52*s,14*s,4*s);g.fill();
+      g.fillStyle='#D97706';g.beginPath();g.rect(45*s,61*s,10*s,4*s);g.fill();
+      g.fillStyle='#F97316';
+      g.beginPath();g.moveTo(45*s,52*s);g.lineTo(50*s,(35-f)*s);g.lineTo(55*s,52*s);g.closePath();g.fill();
+      g.fillStyle='#FEF08A';
+      g.beginPath();g.moveTo(47*s,52*s);g.lineTo(50*s,(40-f)*s);g.lineTo(53*s,52*s);g.closePath();g.fill();
+      g.fillStyle='#EAB308';
+      g.beginPath();g.ellipse(36*s,74*s,5*s,8*s,.2,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(64*s,74*s,5*s,8*s,-.2,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(50*s,83*s,8*s,6*s,0,0,Math.PI);g.fill();
+    }
+  },
+  {
+    id:'max', name:'Max', role:'Personal Assistant', color:'#1D9E75', bg:'#E1F5EE',
+    desc:'Calm bear who helps plan, draft decisions and organize your day.',
+    persona:'You are Max, a warm dependable personal assistant for Jena at Stockwise. Your personality is like a calm steady bear — reliable, thoughtful, always prepared. Help with decisions, drafting emails and messages, planning, organizing thoughts, and anything else Jena needs to run her day smoothly. At the start of each conversation ask one check-in question about what Jena\'s biggest priority is today.',
+    draw:function(cx,w,h,t){
+      var g=cx.getContext('2d'),s=w/100;g.clearRect(0,0,w,h);
+      var b=Math.sin(t*.025)*1.5;
+      var el=Math.sin(t*.03)*1.5;
+      g.fillStyle='#1D9E75';
+      g.beginPath();g.arc(34*s,(28+b+el)*s,8*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(66*s,(28+b-el)*s,8*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#6EE7B7';
+      g.beginPath();g.arc(34*s,(29+b+el)*s,5*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(66*s,(29+b-el)*s,5*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#1D9E75';g.beginPath();g.ellipse(50*s,(44+b)*s,20*s,18*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#6EE7B7';g.beginPath();g.ellipse(50*s,(43+b)*s,14*s,13*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#1D9E75';g.beginPath();g.ellipse(50*s,(68+b)*s,22*s,20*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#6EE7B7';g.beginPath();g.ellipse(50*s,(66+b)*s,15*s,14*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#1D9E75';
+      g.beginPath();g.ellipse(30*s,(54+b)*s,8*s,9*s,0,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(70*s,(54+b)*s,8*s,9*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#1C1814';
+      g.beginPath();g.arc(44*s,(42+b)*s,3*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(56*s,(42+b)*s,3*s,0,Math.PI*2);g.fill();
+      g.fillStyle='white';
+      g.beginPath();g.arc(45*s,(41+b)*s,1.2*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(57*s,(41+b)*s,1.2*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#1D9E75';g.beginPath();g.ellipse(50*s,(50+b)*s,5*s,3.5*s,0,0,Math.PI*2);g.fill();
+      g.strokeStyle='#0F6E56';g.lineWidth=2*s;g.lineCap='round';
+      g.beginPath();g.arc(50*s,(48+b)*s,5*s,.2,Math.PI-.2);g.stroke();
+      g.fillStyle='#1D9E75';
+      g.beginPath();g.ellipse(37*s,87*s,6*s,10*s,.15,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(63*s,87*s,6*s,10*s,-.15,0,Math.PI*2);g.fill();
+    }
+  },
+  {
+    id:'cal', name:'Cal', role:'Scheduling', color:'#0284C7', bg:'#E0F2FE',
+    desc:'Smooth otter who plans your week and keeps everything on track.',
+    persona:'You are Cal, a smooth efficient scheduling agent for Stockwise. Your personality is like a laid-back otter who is somehow incredibly productive. Help plan the week, prioritize tasks, manage consultation schedules, and block time for important work. At the start of each conversation ask one question about what\'s coming up or what the biggest time challenge is this week.',
+    draw:function(cx,w,h,t){
+      var g=cx.getContext('2d'),s=w/100;g.clearRect(0,0,w,h);
+      var sw=Math.sin(t*.04)*3;
+      g.fillStyle='#0EA5E9';
+      g.beginPath();g.ellipse(50*s,(44+sw)*s,19*s,17*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#BAE6FD';g.beginPath();g.ellipse(50*s,(43+sw)*s,13*s,12*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#0EA5E9';
+      g.beginPath();g.ellipse(50*s,(25+sw)*s,6*s,4.5*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#1C1814';
+      g.beginPath();g.arc(44*s,(41+sw)*s,2.8*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(56*s,(41+sw)*s,2.8*s,0,Math.PI*2);g.fill();
+      g.fillStyle='white';
+      g.beginPath();g.arc(45*s,(40+sw)*s,1.1*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(57*s,(40+sw)*s,1.1*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#7DD3FC';g.beginPath();g.ellipse(50*s,(48+sw)*s,4.5*s,2.5*s,0,0,Math.PI*2);g.fill();
+      g.strokeStyle='#0369A1';g.lineWidth=2*s;g.lineCap='round';
+      g.beginPath();g.arc(50*s,(46+sw)*s,4*s,.2,Math.PI-.2);g.stroke();
+      g.fillStyle='#0EA5E9';
+      g.beginPath();g.ellipse(50*s,(68+sw)*s,22*s,16*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#BAE6FD';g.beginPath();g.ellipse(50*s,(66+sw)*s,15*s,11*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#0EA5E9';
+      g.beginPath();g.ellipse(75*s,(70+sw)*s,10*s,5.5*s,.3,0,Math.PI*2);g.fill();
+      g.beginPath();g.ellipse(25*s,(70+sw)*s,10*s,5.5*s,-.3,0,Math.PI*2);g.fill();
+      g.fillStyle='#7DD3FC';
+      g.beginPath();g.moveTo(38*s,(82+sw)*s);g.lineTo(50*s,(92+sw)*s);g.lineTo(62*s,(82+sw)*s);g.closePath();g.fill();
+    }
+  },
+  {
+    id:'penny', name:'Penny', role:'Proposal Writer', color:'#DB2777', bg:'#FCE7F3',
+    desc:'Meticulous butterfly who writes proposals that close deals.',
+    persona:'You are Penny, a polished persuasive proposal writer for Stockwise. Your personality is like a meticulous butterfly — beautiful, precise, and always getting details exactly right. Write professional service proposals and quotes after consultations. Ask smart questions about the client situation and scope. At the start of each conversation ask about a recent or upcoming consultation so you can prepare.',
+    draw:function(cx,w,h,t){
+      var g=cx.getContext('2d'),s=w/100;g.clearRect(0,0,w,h);
+      var fl=Math.sin(t*.06)*.28;
+      g.fillStyle='rgba(236,72,153,.22)';
+      g.beginPath();g.moveTo(50*s,54*s);g.bezierCurveTo(20*s,(18+fl*90)*s,4*s,50*s,9*s,70*s);g.bezierCurveTo(20*s,86*s,42*s,68*s,50*s,54*s);g.fill();
+      g.beginPath();g.moveTo(50*s,54*s);g.bezierCurveTo(80*s,(18-fl*90)*s,96*s,50*s,91*s,70*s);g.bezierCurveTo(80*s,86*s,58*s,68*s,50*s,54*s);g.fill();
+      g.fillStyle='#F9A8D4';
+      g.beginPath();g.moveTo(50*s,54*s);g.bezierCurveTo(26*s,(24+fl*65)*s,10*s,48*s,14*s,67*s);g.bezierCurveTo(22*s,81*s,43*s,66*s,50*s,54*s);g.fill();
+      g.beginPath();g.moveTo(50*s,54*s);g.bezierCurveTo(74*s,(24-fl*65)*s,90*s,48*s,86*s,67*s);g.bezierCurveTo(78*s,81*s,57*s,66*s,50*s,54*s);g.fill();
+      g.fillStyle='#FBCFE8';g.beginPath();g.ellipse(50*s,47*s,10*s,13*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#1C1814';
+      g.beginPath();g.arc(45*s,44*s,2.3*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(55*s,44*s,2.3*s,0,Math.PI*2);g.fill();
+      g.fillStyle='white';
+      g.beginPath();g.arc(46*s,43*s,.9*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(56*s,43*s,.9*s,0,Math.PI*2);g.fill();
+      g.strokeStyle='#BE185D';g.lineWidth=2*s;g.lineCap='round';
+      g.beginPath();g.arc(50*s,49*s,4*s,.2,Math.PI-.2);g.stroke();
+      var an=Math.sin(t*.07)*4;
+      g.strokeStyle='#DB2777';g.lineWidth=1.5*s;
+      g.beginPath();g.moveTo(46*s,35*s);g.lineTo(42*s,(23+an)*s);g.stroke();
+      g.beginPath();g.moveTo(54*s,35*s);g.lineTo(58*s,(23-an)*s);g.stroke();
+      g.fillStyle='#F472B6';
+      g.beginPath();g.arc(42*s,(23+an)*s,3*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(58*s,(23-an)*s,3*s,0,Math.PI*2);g.fill();
+      g.fillStyle='#DB2777';g.beginPath();g.ellipse(50*s,63*s,3*s,6*s,0,0,Math.PI*2);g.fill();
+    }
+  },
+  {
+    id:'echo', name:'Echo', role:'Client Responses', color:'#0891B2', bg:'#E0F9FF',
+    desc:'Friendly dolphin who handles client emails and follow-ups.',
+    persona:'You are Echo, a quick empathetic client response agent for Stockwise. Your personality is like a friendly dolphin — smart, communicative, and great at reading the room. Handle client emails, messages, follow-ups, and thank-you notes — all in Jena\'s warm authentic voice. At the start of each conversation ask if there are any client situations that need special attention today.',
+    draw:function(cx,w,h,t){
+      var g=cx.getContext('2d'),s=w/100;g.clearRect(0,0,w,h);
+      var d=Math.sin(t*.04)*3;
+      g.fillStyle='#06B6D4';
+      g.beginPath();g.ellipse(50*s,(44+d)*s,18*s,17*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#A5F3FC';g.beginPath();g.ellipse(50*s,(43+d)*s,12*s,11*s,0,0,Math.PI*2);g.fill();
+      var fn=Math.sin(t*.05)*2;
+      g.fillStyle='#0891B2';
+      g.beginPath();g.moveTo(50*s,(26+d)*s);g.lineTo(42*s,(36+d)*s);g.lineTo(58*s,(36+d)*s);g.closePath();g.fill();
+      g.fillStyle='#1C1814';
+      g.beginPath();g.arc(44*s,(41+d)*s,2.8*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(56*s,(41+d)*s,2.8*s,0,Math.PI*2);g.fill();
+      g.fillStyle='white';
+      g.beginPath();g.arc(45*s,(40+d)*s,1.1*s,0,Math.PI*2);g.fill();
+      g.beginPath();g.arc(57*s,(40+d)*s,1.1*s,0,Math.PI*2);g.fill();
+      g.strokeStyle='#0E7490';g.lineWidth=2*s;g.lineCap='round';
+      g.beginPath();g.arc(50*s,(47+d)*s,4*s,.2,Math.PI-.2);g.stroke();
+      g.fillStyle='#06B6D4';
+      g.beginPath();g.ellipse(50*s,(68+d)*s,24*s,17*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#A5F3FC';g.beginPath();g.ellipse(50*s,(66+d)*s,16*s,12*s,0,0,Math.PI*2);g.fill();
+      g.fillStyle='#0891B2';
+      g.beginPath();g.moveTo(28*s,(70+d)*s);g.lineTo(15*s,(60+d)*s);g.lineTo(15*s,(80+d)*s);g.closePath();g.fill();
+      g.beginPath();g.moveTo(72*s,(70+d)*s);g.lineTo(85*s,(60+d)*s);g.lineTo(85*s,(80+d)*s);g.closePath();g.fill();
+      g.fillStyle='#7DD3FC';
+      g.beginPath();g.moveTo(38*s,(83+d)*s);g.lineTo(50*s,(93+d)*s);g.lineTo(62*s,(83+d)*s);g.closePath();g.fill();
+      g.strokeStyle='rgba(6,182,212,.5)';g.lineWidth=1.5*s;
+      for(var i=1;i<=3;i++){
+        g.globalAlpha=.5-i*.12;
+        var r=(16+i*6)*s;
+        g.beginPath();g.arc(50*s,(44+d)*s,r,Math.PI*.65,Math.PI*1.35);g.stroke();
+        g.beginPath();g.arc(50*s,(44+d)*s,r,Math.PI*1.65,Math.PI*2.35);g.stroke();
+      }
+      g.globalAlpha=1;
+    }
+  }
+];
+
+// ---- STATE ----
+var sel = [];
+var chatAgents = [];
+var chatHistory = [];
+
+// ---- ANIMATION ----
+function animate(agent, canvas, size) {
+  var t = 0;
+  function frame() {
+    agent.draw(canvas, size, size, t++);
+    requestAnimationFrame(frame);
+  }
+  frame();
+}
+
+// ---- RENDER GRID ----
+function renderGrid() {
+  var grid = document.getElementById('agent-grid');
+  grid.innerHTML = '';
+  AGENTS.forEach(function(a) {
+    var card = document.createElement('div');
+    card.className = 'acard';
+    card.id = 'card-' + a.id;
+    card.style.borderColor = a.color + '40';
+
+    var cv = document.createElement('canvas');
+    cv.width = 100; cv.height = 100;
+    card.appendChild(cv);
+    animate(a, cv, 100);
+
+    var nm = document.createElement('div');
+    nm.className = 'acard-name';
+    nm.style.color = a.color;
+    nm.textContent = a.name;
+    card.appendChild(nm);
+
+    var rl = document.createElement('div');
+    rl.className = 'acard-role';
+    rl.textContent = a.role;
+    card.appendChild(rl);
+
+    var ds = document.createElement('div');
+    ds.className = 'acard-desc';
+    ds.textContent = a.desc;
+    card.appendChild(ds);
+
+    var btn = document.createElement('button');
+    btn.className = 'chat-btn';
+    btn.style.background = a.color;
+    btn.textContent = 'Chat with ' + a.name + ' →';
+    btn.onclick = function(e) { e.stopPropagation(); chatOne(a.id); };
+    card.appendChild(btn);
+
+    card.onclick = function() { toggleSel(a.id, card, a.color); };
+    grid.appendChild(card);
+  });
+}
+
+function toggleSel(id, card, color) {
+  var idx = sel.indexOf(id);
+  if (idx === -1) {
+    sel.push(id);
+    card.classList.add('sel');
+    card.style.borderColor = color;
+  } else {
+    sel.splice(idx, 1);
+    card.classList.remove('sel');
+    card.style.borderColor = color + '40';
+  }
+  var info = document.getElementById('sel-info');
+  var btn = document.getElementById('collab-btn');
+  if (sel.length === 0) { info.textContent = 'Click cards to select for team collab'; btn.disabled = true; }
+  else if (sel.length === 1) { info.textContent = '1 selected — pick more to collaborate'; btn.disabled = true; }
+  else { info.textContent = sel.length + ' agents selected'; btn.disabled = false; }
+}
+
+// ---- CHAT ONE ----
+function chatOne(id) {
+  chatAgents = [AGENTS.find(function(a) { return a.id === id; })];
+  chatHistory = [];
+  showChat();
+  var ag = chatAgents[0];
+  document.getElementById('chat-iname').textContent = ag.name;
+  document.getElementById('chat-isub').textContent = ag.role + ' Agent';
+  buildAvatars();
+  clearMsgs();
+  setTimeout(function() { addBotMsg(ag.name + ': ' + getOpener(ag), ag); }, 400);
+}
+
+// ---- COLLAB ----
+function startCollab() {
+  if (sel.length < 2) return;
+  chatAgents = sel.map(function(id) { return AGENTS.find(function(a) { return a.id === id; }); });
+  chatHistory = [];
+  showChat();
+  var names = chatAgents.map(function(a) { return a.name; }).join(', ');
+  document.getElementById('chat-iname').textContent = 'Team: ' + names;
+  document.getElementById('chat-isub').textContent = 'Collaboration — ' + chatAgents.length + ' agents';
+  buildAvatars();
+  clearMsgs();
+  setTimeout(function() {
+    addCollabMsg('Your team of ' + chatAgents.length + ' is ready — ' + names + '. What should we work on together?');
+  }, 400);
+}
+
+function getOpener(ag) {
+  var openers = {
+    rex: 'Before I start hunting — what type of business are you most excited to land this week?',
+    nova: 'What\'s one thing happening in the business right now we could turn into a great post?',
+    spark: 'What\'s one problem you\'ve seen a local business struggling with that Stockwise doesn\'t solve yet?',
+    max: 'What\'s the one thing taking up the most mental space today? Let\'s tackle that first.',
+    cal: 'What\'s the most important thing that MUST happen this week? I\'ll build the schedule around that.',
+    penny: 'Tell me about your most recent consultation — what was the client\'s biggest problem?',
+    echo: 'Any client situations that need extra care right now? Let\'s make sure we handle everything right.'
+  };
+  return openers[ag.id] || 'How can I help you today?';
+}
+
+// ---- SHOW/HIDE ----
+function showChat() {
+  document.getElementById('grid-view').style.display = 'none';
+  document.getElementById('chat-view').style.display = 'flex';
+}
+function goBack() {
+  document.getElementById('chat-view').style.display = 'none';
+  document.getElementById('grid-view').style.display = 'block';
+}
+function clearMsgs() { document.getElementById('msgs').innerHTML = ''; }
+
+function buildAvatars() {
+  var avs = document.getElementById('chat-avs');
+  avs.innerHTML = '';
+  chatAgents.forEach(function(ag) {
+    var cv = document.createElement('canvas');
+    cv.className = 'chat-av';
+    cv.width = 76; cv.height = 76;
+    avs.appendChild(cv);
+    animate(ag, cv, 76);
+  });
+}
+
+// ---- MESSAGES ----
+function addBotMsg(text, agent) {
+  var msgs = document.getElementById('msgs');
+  var msg = document.createElement('div');
+  msg.className = 'msg b';
+  var meta = document.createElement('div');
+  meta.className = 'mmeta';
+  var av = document.createElement('canvas');
+  av.className = 'mav'; av.width = 40; av.height = 40;
+  meta.appendChild(av);
+  animate(agent, av, 40);
+  var who = document.createElement('span');
+  who.className = 'mwho';
+  who.style.color = agent.color;
+  who.textContent = agent.name;
+  meta.appendChild(who);
+  msg.appendChild(meta);
+  var bub = document.createElement('div');
+  bub.className = 'bub';
+  bub.innerHTML = text.replace(/\n/g, '<br>');
+  var tm = document.createElement('div');
+  tm.className = 'mtime';
+  tm.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  msg.appendChild(bub);
+  msg.appendChild(tm);
+  msgs.appendChild(msg);
+  msgs.scrollTop = 99999;
+}
+
+function addUserMsg(text) {
+  var msgs = document.getElementById('msgs');
+  var msg = document.createElement('div');
+  msg.className = 'msg u';
+  var bub = document.createElement('div');
+  bub.className = 'bub';
+  bub.textContent = text;
+  var tm = document.createElement('div');
+  tm.className = 'mtime';
+  tm.textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  msg.appendChild(bub);
+  msg.appendChild(tm);
+  msgs.appendChild(msg);
+  msgs.scrollTop = 99999;
+}
+
+function addCollabMsg(text) {
+  var msgs = document.getElementById('msgs');
+  var msg = document.createElement('div');
+  msg.className = 'msg co';
+  var bub = document.createElement('div');
+  bub.className = 'bub';
+  bub.innerHTML = '<div class="ctag">🤝 Team</div>' + text.replace(/\n/g, '<br>');
+  msg.appendChild(bub);
+  msgs.appendChild(msg);
+  msgs.scrollTop = 99999;
+}
+
+function addAgentCollabMsg(text, agent) {
+  var msgs = document.getElementById('msgs');
+  var msg = document.createElement('div');
+  msg.className = 'msg co';
+  var meta = document.createElement('div');
+  meta.className = 'mmeta';
+  var av = document.createElement('canvas');
+  av.className = 'mav'; av.width = 40; av.height = 40;
+  meta.appendChild(av);
+  animate(agent, av, 40);
+  var who = document.createElement('span');
+  who.className = 'mwho';
+  who.style.color = agent.color;
+  who.textContent = agent.name + ' (' + agent.role + ')';
+  meta.appendChild(who);
+  msg.appendChild(meta);
+  var bub = document.createElement('div');
+  bub.className = 'bub';
+  bub.innerHTML = text.replace(/\n/g, '<br>');
+  msg.appendChild(bub);
+  msgs.appendChild(msg);
+  msgs.scrollTop = 99999;
+}
+
+function showTyping(agent) {
+  var msgs = document.getElementById('msgs');
+  var row = document.createElement('div');
+  row.className = 'trow';
+  row.id = 'typ-' + agent.id;
+  var av = document.createElement('canvas');
+  av.className = 'mav'; av.width = 40; av.height = 40;
+  row.appendChild(av);
+  animate(agent, av, 40);
+  var tb = document.createElement('div');
+  tb.className = 'tbub';
+  for (var i = 0; i < 3; i++) {
+    var d = document.createElement('span');
+    d.className = 'tdot';
+    d.style.background = agent.color;
+    tb.appendChild(d);
+  }
+  row.appendChild(tb);
+  msgs.appendChild(row);
+  msgs.scrollTop = 99999;
+}
+
+function removeTyping(id) {
+  var el = document.getElementById('typ-' + id);
+  if (el) el.remove();
+}
+
+// ---- API CALL ----
+async function callAPI(systemPrompt, messages) {
+  var response = await fetch(API, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': KEY,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1000,
+      system: systemPrompt + '\n\n' + BIZ,
+      messages: messages
+    })
+  });
+  var data = await response.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.content[0].text;
+}
+
+// ---- SEND ----
+async function send() {
+  var input = document.getElementById('msgin');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addUserMsg(text);
+  chatHistory.push({ role: 'user', content: text });
+  var snap = chatHistory.slice();
+
+  if (chatAgents.length === 1) {
+    // ONE ON ONE
+    var agent = chatAgents[0];
+    showTyping(agent);
+    try {
+      var reply = await callAPI(agent.persona, snap);
+      removeTyping(agent.id);
+      chatHistory.push({ role: 'assistant', content: reply });
+      addBotMsg(reply, agent);
+    } catch(e) {
+      removeTyping(agent.id);
+      addBotMsg('Sorry, something went wrong: ' + e.message, agent);
+      history.pop();
+    }
+  } else {
+    // TEAM COLLAB
+    var thread = 'Topic: ' + text;
+    for (var i = 0; i < chatAgents.length; i++) {
+      var ag = chatAgents[i];
+      await new Promise(function(r) { setTimeout(r, 350 * (i + 1)); });
+      showTyping(ag);
+      var prev = i === 0 ? '' : '\n\nYour teammates already said:\n' + thread;
+      var prompt = 'The team is collaborating. Topic: "' + text + '"' + prev + '\n\nAdd YOUR unique perspective as ' + ag.name + ' (' + ag.role + '). Build on what others said. Be concise (3-4 sentences). Stay in your character.';
+      try {
+        var r2 = await callAPI(ag.persona, [{ role: 'user', content: prompt }]);
+        removeTyping(ag.id);
+        thread += '\n\n' + ag.name + ': ' + r2;
+        addAgentCollabMsg(r2, ag);
+      } catch(e) {
+        removeTyping(ag.id);
+      }
+    }
+    // SYNTHESIS
+    await new Promise(function(r) { setTimeout(r, 500); });
+    var lead = chatAgents[0];
+    showTyping(lead);
+    try {
+      var synth = await callAPI('You are the Stockwise AI team giving a final synthesis. Be direct and practical. ' + BIZ, [{
+        role: 'user',
+        content: 'Team discussed: "' + text + '"\n\nEveryone said:\n' + thread + '\n\nGive Jena 2-3 clear action items from this discussion.'
+      }]);
+      removeTyping(lead.id);
+      var msgs = document.getElementById('msgs');
+      var sm = document.createElement('div');
+      sm.className = 'msg co';
+      sm.style.maxWidth = '90%';
+      var sb = document.createElement('div');
+      sb.className = 'bub';
+      sb.style.background = 'linear-gradient(135deg,' + chatAgents[0].color + ',' + chatAgents[chatAgents.length-1].color + ')';
+      sb.innerHTML = '<div class="ctag">🤝 Team action items</div>' + synth.replace(/\n/g, '<br>');
+      sm.appendChild(sb);
+      msgs.appendChild(sm);
+      msgs.scrollTop = 99999;
+    } catch(e) {
+      removeTyping(lead.id);
+    }
+    chatHistory.push({ role: 'assistant', content: '[Team collab on: ' + text + ']' });
+  }
+}
+
+document.getElementById('msgin').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') send();
+});
+
+renderGrid();
+</script>
+</body>
+</html>
